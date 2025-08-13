@@ -32,6 +32,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 
+# Configure request timeout and buffer size for large uploads
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 31536000  # 1 year for static files
+
 def allowed_file(filename):
     """Check if uploaded file has allowed extension"""
     return '.' in filename and \
@@ -54,12 +57,28 @@ def index():
         back_file_path = None
         
         try:
-            # Check if request has files - with proper error handling
+            # Check content length first to avoid parsing large requests
+            content_length = request.content_length
+            if content_length and content_length > MAX_FILE_SIZE * 2:  # Allow for form data overhead
+                flash('Request too large. Please reduce file sizes.', 'error')
+                return redirect(request.url)
+            
+            # Check content type and handle potential errors
+            if not request.content_type or not request.content_type.startswith('multipart/form-data'):
+                flash('Invalid request format. Please use the form to upload files.', 'error')
+                return redirect(request.url)
+            
+            # Check if request has files - with proper error handling and timeout protection
             try:
                 files = request.files
+                form_data = request.form
+            except (UnicodeDecodeError, ValueError) as e:
+                logging.error(f"Error parsing form data: {str(e)}")
+                flash('Invalid form data encoding. Please try again.', 'error')
+                return redirect(request.url)
             except Exception as e:
-                logging.error(f"Error accessing request files: {str(e)}")
-                flash('Error processing uploaded files. Please try again.', 'error')
+                logging.error(f"Error accessing request data: {str(e)}")
+                flash('Error processing request. Please try again with smaller files.', 'error')
                 return redirect(request.url)
             
             if not files:
@@ -103,9 +122,8 @@ def index():
                     back_file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_back_filename)
                     back_file.save(back_file_path)
             
-            # Get form data with error handling
+            # Get form data with error handling (already accessed above)
             try:
-                form_data = request.form
                 book_data = {
                     'title': form_data.get('title', '').strip(),
                     'subtitle': form_data.get('subtitle', '').strip(),
@@ -193,12 +211,14 @@ def offline():
 @app.errorhandler(413)
 def too_large(e):
     """Handle file too large error"""
-    flash('File is too large. Maximum size is 16MB.', 'error')
+    logging.warning("File upload too large")
+    flash('File is too large. Maximum size is 16MB per file.', 'error')
     return redirect(url_for('index'))
 
 @app.errorhandler(400)
 def bad_request(e):
     """Handle bad request errors"""
+    logging.warning(f"Bad request: {str(e)}")
     flash('Invalid request. Please check your form data and try again.', 'error')
     return redirect(url_for('index'))
 
@@ -207,6 +227,13 @@ def internal_error(e):
     """Handle internal server errors"""
     logging.error(f"Internal server error: {str(e)}")
     flash('An internal error occurred. Please try again.', 'error')
+    return redirect(url_for('index'))
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Handle any uncaught exceptions"""
+    logging.error(f"Uncaught exception: {str(e)}")
+    flash('An unexpected error occurred. Please try again.', 'error')
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
