@@ -36,25 +36,41 @@ def index():
     """Main page with form for cover generation"""
     if request.method == 'POST':
         try:
-            # Validate file upload
-            if 'cover_image' not in request.files:
-                flash('No file selected', 'error')
+            # Validate front cover upload
+            if 'front_cover_image' not in request.files:
+                flash('No front cover image selected', 'error')
                 return redirect(request.url)
             
-            file = request.files['cover_image']
-            if file.filename == '':
-                flash('No file selected', 'error')
+            front_file = request.files['front_cover_image']
+            if front_file.filename == '':
+                flash('No front cover image selected', 'error')
                 return redirect(request.url)
             
-            if not allowed_file(file.filename):
-                flash('Invalid file type. Please upload PNG, JPG, JPEG, GIF, BMP, or TIFF files.', 'error')
+            if not allowed_file(front_file.filename):
+                flash('Invalid file type for front cover. Please upload PNG, JPG, JPEG, GIF, BMP, or TIFF files.', 'error')
                 return redirect(request.url)
             
-            # Save uploaded file
-            filename = secure_filename(file.filename)
-            unique_filename = f"{uuid.uuid4()}_{filename}"
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-            file.save(file_path)
+            # Save front cover file
+            front_filename = secure_filename(front_file.filename or "front_upload")
+            unique_front_filename = f"{uuid.uuid4()}_front_{front_filename}"
+            front_file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_front_filename)
+            front_file.save(front_file_path)
+            
+            # Handle back cover upload (optional)
+            back_file_path = None
+            if 'back_cover_image' in request.files:
+                back_file = request.files['back_cover_image']
+                if back_file.filename and back_file.filename != '':
+                    if not allowed_file(back_file.filename):
+                        flash('Invalid file type for back cover. Please upload PNG, JPG, JPEG, GIF, BMP, or TIFF files.', 'error')
+                        os.remove(front_file_path)  # Clean up front cover
+                        return redirect(request.url)
+                    
+                    # Save back cover file
+                    back_filename = secure_filename(back_file.filename or "back_upload")
+                    unique_back_filename = f"{uuid.uuid4()}_back_{back_filename}"
+                    back_file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_back_filename)
+                    back_file.save(back_file_path)
             
             # Get form data
             book_data = {
@@ -62,6 +78,7 @@ def index():
                 'subtitle': request.form.get('subtitle', '').strip(),
                 'author': request.form.get('author', '').strip(),
                 'spine_text': request.form.get('spine_text', '').strip(),
+                'back_cover_text': request.form.get('back_cover_text', '').strip(),
                 'page_count': int(request.form.get('page_count', 100)),
                 'trim_size': request.form.get('trim_size', '6x9'),
                 'title_font_size': int(request.form.get('title_font_size', 48)),
@@ -72,7 +89,9 @@ def index():
             # Validate required fields
             if not book_data['title'] or not book_data['author']:
                 flash('Title and Author are required fields', 'error')
-                os.remove(file_path)  # Clean up uploaded file
+                os.remove(front_file_path)  # Clean up uploaded files
+                if back_file_path:
+                    os.remove(back_file_path)
                 return redirect(request.url)
             
             # Generate cover
@@ -81,13 +100,16 @@ def index():
             output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
             
             success = generator.generate_cover(
-                front_image_path=file_path,
+                front_image_path=front_file_path,
+                back_image_path=back_file_path,
                 book_data=book_data,
                 output_path=output_path
             )
             
-            # Clean up uploaded file
-            os.remove(file_path)
+            # Clean up uploaded files
+            os.remove(front_file_path)
+            if back_file_path:
+                os.remove(back_file_path)
             
             if success:
                 flash('Cover generated successfully!', 'success')

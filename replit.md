@@ -1,6 +1,6 @@
 # Overview
 
-KDP Cover Creator is a Flask-based web application that generates professional KDP (Kindle Direct Publishing) compliant wraparound book covers. The application creates PDF covers with proper bleed margins and spine calculations based on page count and trim size specifications. Users can upload cover images and customize various aspects of their book covers including dimensions, colors, and text elements.
+KDP Cover Creator is a Flask-based web application that generates professional KDP (Kindle Direct Publishing) compliant wraparound book covers. The application creates complete PDF covers with front cover, spine, and back cover sections, including proper bleed margins and spine calculations based on page count and trim size specifications. Users can upload separate front and back cover images and customize various aspects of their book covers including dimensions, colors, and text elements.
 
 # User Preferences
 
@@ -20,10 +20,14 @@ Preferred communication style: Simple, everyday language.
 - **PDF Generation**: ReportLab library for creating KDP-compliant PDF outputs
 - **File Management**: Secure file upload handling with extension validation and size limits
 - **Cover Generation Logic**: Dedicated CoverGenerator class handling KDP specifications including:
+  - Complete wraparound cover layout (back + spine + front)
   - Standard trim sizes (5x8, 6x9, 8.5x11, etc.)
   - Automatic spine width calculation based on page count
   - Bleed margin compliance (0.125" standard)
   - Safe text margin enforcement (0.25" additional)
+  - Front and back cover image support with optional back cover
+  - Text overlay system for front cover and back cover descriptions
+  - Rotated spine text with proper centering
   - 300 DPI output resolution
 
 ## Data Storage

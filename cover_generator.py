@@ -150,7 +150,7 @@ class CoverGenerator:
             
             draw.text((x, y), line, font=font, fill=fill)
     
-    def generate_cover(self, front_image_path, book_data, output_path):
+    def generate_cover(self, front_image_path, book_data, output_path, back_image_path=None):
         """Generate complete KDP wraparound cover"""
         try:
             # Get dimensions
@@ -174,7 +174,18 @@ class CoverGenerator:
             # Create base cover image
             cover = Image.new('RGB', (width_px, height_px), (255, 255, 255))
             
-            # Load and position front cover image
+            # Load and position back cover image (left side of the wraparound)
+            if back_image_path:
+                back_img = self.load_and_resize_image(
+                    back_image_path, 
+                    front_width_px, 
+                    front_height_px
+                )
+                back_x = bleed_px
+                back_y = bleed_px
+                cover.paste(back_img, (back_x, back_y))
+            
+            # Load and position front cover image (right side of the wraparound)
             front_img = self.load_and_resize_image(
                 front_image_path, 
                 front_width_px, 
@@ -197,6 +208,16 @@ class CoverGenerator:
                 front_width_px - (2 * safe_margin_px),
                 front_height_px - (2 * safe_margin_px)
             )
+            
+            # Add back cover text if provided
+            if back_image_path and book_data.get('back_cover_text', '').strip():
+                self.add_back_cover_text(
+                    draw, book_data,
+                    bleed_px + safe_margin_px,
+                    bleed_px + safe_margin_px,
+                    front_width_px - (2 * safe_margin_px),
+                    front_height_px - (2 * safe_margin_px)
+                )
             
             # Add spine text
             if book_data['spine_text'].strip():
@@ -274,8 +295,8 @@ class CoverGenerator:
             if not book_data['spine_text'].strip():
                 return
                 
-            # Create temporary image for rotated text
-            spine_font_size = min(int(width * 0.8), 24)
+            # Calculate appropriate font size for spine
+            spine_font_size = max(min(int(width * 0.6), 20), 8)
             font = self.get_font(spine_font_size)
             
             # Parse color
@@ -284,37 +305,123 @@ class CoverGenerator:
                 color = color[1:]
             color_rgb = tuple(int(color[i:i+2], 16) for i in (0, 2, 4))
             
-            # Create text image
-            text_img = Image.new('RGBA', (height, width), (0, 0, 0, 0))
-            text_draw = ImageDraw.Draw(text_img)
+            # Create temporary image for the text
+            temp_img = Image.new('RGBA', (height, width), (0, 0, 0, 0))
+            temp_draw = ImageDraw.Draw(temp_img)
             
-            # Draw text horizontally first
-            bbox = text_draw.textbbox((0, 0), book_data['spine_text'], font=font)
+            # Get text dimensions
+            bbox = temp_draw.textbbox((0, 0), book_data['spine_text'], font=font)
             text_width = bbox[2] - bbox[0]
             text_height = bbox[3] - bbox[1]
             
+            # Center the text in the temporary image
             text_x = (height - text_width) // 2
             text_y = (width - text_height) // 2
             
-            text_draw.text((text_x, text_y), book_data['spine_text'], font=font, fill=color_rgb)
+            # Draw text on temporary image
+            temp_draw.text((text_x, text_y), book_data['spine_text'], font=font, fill=color_rgb)
             
-            # Rotate 90 degrees counterclockwise
-            rotated_text = text_img.rotate(90, expand=True)
+            # Rotate the text image 90 degrees counterclockwise
+            rotated_img = temp_img.rotate(90, expand=True)
             
-            # Paste onto main cover
-            cover_img = Image.new('RGBA', draw.im.size, (0, 0, 0, 0))
-            cover_img.paste(rotated_text, (x, y), rotated_text)
+            # Calculate position to center the rotated text on the spine
+            spine_center_x = x + width // 2
+            spine_center_y = y + height // 2
             
-            # Convert back to RGB and paste
-            cover_rgb = Image.new('RGB', draw.im.size, (255, 255, 255))
-            cover_rgb.paste(draw.im, (0, 0))
-            cover_rgb.paste(cover_img, (0, 0), cover_img)
+            rotated_width, rotated_height = rotated_img.size
+            paste_x = spine_center_x - rotated_width // 2
+            paste_y = spine_center_y - rotated_height // 2
             
-            # Update the draw object
-            draw.im.paste(cover_rgb, (0, 0))
+            # Create a copy of the current image to work with
+            current_img = draw._image.copy()
+            
+            # Paste the rotated text
+            if rotated_img.mode == 'RGBA':
+                current_img.paste(rotated_img, (paste_x, paste_y), rotated_img)
+            else:
+                current_img.paste(rotated_img, (paste_x, paste_y))
+            
+            # Update the drawing context
+            draw._image.paste(current_img)
             
         except Exception as e:
             self.logger.error(f"Error adding spine text: {str(e)}")
+    
+    def add_back_cover_text(self, draw, book_data, x, y, width, height):
+        """Add description text to back cover"""
+        try:
+            back_text = book_data.get('back_cover_text', '').strip()
+            if not back_text:
+                return
+            
+            # Parse color
+            color = book_data['text_color']
+            if color.startswith('#'):
+                color = color[1:]
+            color_rgb = tuple(int(color[i:i+2], 16) for i in (0, 2, 4))
+            
+            # Use a smaller font for back cover description
+            desc_font_size = max(book_data['author_font_size'] - 4, 12)
+            font = self.get_font(desc_font_size)
+            
+            # Position text in upper portion of back cover
+            text_y_start = y + height // 8
+            text_area_height = height // 2
+            
+            # Split text into paragraphs and wrap lines
+            paragraphs = back_text.split('\n')
+            all_lines = []
+            
+            for paragraph in paragraphs:
+                if paragraph.strip():
+                    # Wrap paragraph text
+                    words = paragraph.split()
+                    lines = []
+                    current_line = []
+                    
+                    for word in words:
+                        test_line = ' '.join(current_line + [word])
+                        bbox = draw.textbbox((0, 0), test_line, font=font)
+                        line_width = bbox[2] - bbox[0]
+                        
+                        if line_width <= width or not current_line:
+                            current_line.append(word)
+                        else:
+                            if current_line:
+                                lines.append(' '.join(current_line))
+                            current_line = [word]
+                    
+                    if current_line:
+                        lines.append(' '.join(current_line))
+                    
+                    all_lines.extend(lines)
+                    all_lines.append('')  # Add blank line between paragraphs
+            
+            # Remove trailing blank line
+            if all_lines and all_lines[-1] == '':
+                all_lines.pop()
+            
+            # Calculate line height and total text height
+            line_height = font.getbbox('Ay')[3] - font.getbbox('Ay')[1] + 4
+            total_text_height = len(all_lines) * line_height
+            
+            # Center text vertically in the available area
+            start_y = text_y_start + (text_area_height - total_text_height) // 2
+            
+            # Draw each line
+            for i, line in enumerate(all_lines):
+                if line.strip():  # Skip empty lines
+                    bbox = draw.textbbox((0, 0), line, font=font)
+                    text_width = bbox[2] - bbox[0]
+                    
+                    # Center align text
+                    line_x = x + (width - text_width) // 2
+                    line_y = start_y + i * line_height
+                    
+                    draw.text((line_x, line_y), line, font=font, fill=color_rgb)
+            
+        except Exception as e:
+            self.logger.error(f"Error adding back cover text: {str(e)}")
     
     def create_pdf(self, image_path, output_path, width_inches, height_inches):
         """Convert image to PDF at 300 DPI"""
