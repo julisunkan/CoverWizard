@@ -40,118 +40,128 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container py-5">
-        <!-- Header -->
-        <div class="row mb-5">
-            <div class="col-12 text-center">
-                <h1 class="display-4 mb-3">
-                    <i class="fas fa-book text-primary me-3"></i>
-                    KDP Cover Creator
-                </h1>
-                <p class="lead text-muted">Generate professional KDP-compliant wraparound book covers with proper bleed margins</p>
-            </div>
+    <div class="container">
+        <!-- Mobile App Header -->
+        <div class="mobile-header">
+            <h1>
+                <i class="fas fa-book me-2"></i>
+                KDP Cover Creator
+            </h1>
+            <p>Professional book cover generator</p>
         </div>
 
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                    <div class="mobile-alert mobile-alert-{{ 'danger' if category == 'error' else 'success' }}" role="alert">
                         <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' }} me-2"></i>
                         {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="background: none; border: none; color: inherit; opacity: 0.7; font-size: 20px; float: right; margin-top: -4px;"></button>
                     </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
 
         <!-- Main Form -->
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="card shadow">
-                    <div class="card-header">
-                        <h3 class="card-title mb-0">
-                            <i class="fas fa-magic me-2"></i>
-                            Create Your Book Cover
-                        </h3>
+        <div class="mobile-card">
+            <div class="mobile-card-header">
+                <div class="mobile-section-header" style="border: none; padding: 0; margin: 0;">
+                    <div class="mobile-section-icon">
+                        <i class="fas fa-magic"></i>
                     </div>
-                    <div class="card-body">
+                    <h3 class="mobile-section-title">Create Your Book Cover</h3>
+                </div>
+            </div>
+            <div class="mobile-card-body">
                         <form method="POST" enctype="multipart/form-data" id="coverForm">
                             
                             <!-- Image Upload Section -->
-                            <div class="mb-4">
-                                <h5 class="mb-3">
-                                    <i class="fas fa-image me-2 text-primary"></i>
-                                    Cover Images
-                                </h5>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="front_cover_image" class="form-label">Front Cover Image *</label>
-                                        <input type="file" class="form-control" id="front_cover_image" name="front_cover_image" 
-                                               accept="image/*" required>
-                                        <div class="form-text">
-                                            <i class="fas fa-info-circle me-1"></i>
-                                            Main cover image for the front
-                                        </div>
+                            <div class="mobile-form-group">
+                                <div class="mobile-section-header">
+                                    <div class="mobile-section-icon">
+                                        <i class="fas fa-image"></i>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="back_cover_image" class="form-label">Back Cover Image</label>
-                                        <input type="file" class="form-control" id="back_cover_image" name="back_cover_image" 
-                                               accept="image/*">
-                                        <div class="form-text">
-                                            <i class="fas fa-info-circle me-1"></i>
-                                            Optional back cover image
+                                    <h5 class="mobile-section-title">Cover Images</h5>
+                                </div>
+                                
+                                <div class="mobile-form-group">
+                                    <label for="front_cover_image" class="mobile-form-label">Front Cover Image *</label>
+                                    <div class="mobile-file-upload">
+                                        <input type="file" id="front_cover_image" name="front_cover_image" accept="image/*" required>
+                                        <div class="mobile-file-icon">
+                                            <i class="fas fa-image"></i>
                                         </div>
+                                        <div class="mobile-file-text">Tap to select front cover</div>
+                                        <div class="mobile-file-subtext">Main cover image for the front</div>
                                     </div>
                                 </div>
-                                <div class="form-text mt-2">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Supported formats: PNG, JPG, JPEG, GIF, BMP, TIFF. Maximum size: 16MB each
-                                    <br>
-                                    <i class="fas fa-magic me-1 text-primary"></i>
-                                    Images are automatically enhanced and extended to fit cover dimensions professionally
+                                
+                                <div class="mobile-form-group">
+                                    <label for="back_cover_image" class="mobile-form-label">Back Cover Image</label>
+                                    <div class="mobile-file-upload">
+                                        <input type="file" id="back_cover_image" name="back_cover_image" accept="image/*">
+                                        <div class="mobile-file-icon">
+                                            <i class="fas fa-image"></i>
+                                        </div>
+                                        <div class="mobile-file-text">Tap to select back cover</div>
+                                        <div class="mobile-file-subtext">Optional back cover image</div>
+                                    </div>
+                                </div>
+                                
+                                <div style="background: rgba(0, 123, 255, 0.1); border-radius: 12px; padding: 16px; margin-top: 16px;">
+                                    <div style="color: rgba(255, 255, 255, 0.8); font-size: 14px; line-height: 1.5;">
+                                        <i class="fas fa-info-circle me-2" style="color: #007bff;"></i>
+                                        Supports PNG, JPG, JPEG, GIF, BMP, TIFF up to 16MB each
+                                        <br>
+                                        <i class="fas fa-magic me-2" style="color: #007bff;"></i>
+                                        Images automatically enhanced for professional covers
+                                    </div>
                                 </div>
                             </div>
 
                             <hr class="my-4">
 
                             <!-- Book Information -->
-                            <div class="mb-4">
-                                <h5 class="mb-3">
-                                    <i class="fas fa-info-circle me-2 text-primary"></i>
-                                    Book Information
-                                </h5>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="title" class="form-label">Book Title *</label>
-                                        <input type="text" class="form-control" id="title" name="title" required
-                                               placeholder="Enter your book title">
+                            <div class="mobile-form-group">
+                                <div class="mobile-section-header">
+                                    <div class="mobile-section-icon">
+                                        <i class="fas fa-info-circle"></i>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="subtitle" class="form-label">Subtitle</label>
-                                        <input type="text" class="form-control" id="subtitle" name="subtitle"
-                                               placeholder="Enter subtitle (optional)">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="author" class="form-label">Author Name *</label>
-                                        <input type="text" class="form-control" id="author" name="author" required
-                                               placeholder="Enter author name">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="spine_text" class="form-label">Spine Text</label>
-                                        <input type="text" class="form-control" id="spine_text" name="spine_text"
-                                               placeholder="Text for book spine (optional)">
-                                    </div>
+                                    <h5 class="mobile-section-title">Book Information</h5>
                                 </div>
-                                <div class="row">
-                                    <div class="col-12 mb-3">
-                                        <label for="back_cover_text" class="form-label">Back Cover Description</label>
-                                        <textarea class="form-control" id="back_cover_text" name="back_cover_text" rows="4"
-                                                  placeholder="Book description, author bio, or other back cover text (optional)"></textarea>
-                                        <div class="form-text">
-                                            <i class="fas fa-info-circle me-1"></i>
-                                            This text will be overlaid on the back cover image
-                                        </div>
+                                
+                                <div class="mobile-form-group">
+                                    <label for="title" class="mobile-form-label">Book Title *</label>
+                                    <input type="text" class="mobile-form-control" id="title" name="title" required
+                                           placeholder="Enter your book title">
+                                </div>
+                                
+                                <div class="mobile-form-group">
+                                    <label for="subtitle" class="mobile-form-label">Subtitle</label>
+                                    <input type="text" class="mobile-form-control" id="subtitle" name="subtitle"
+                                           placeholder="Enter subtitle (optional)">
+                                </div>
+                                
+                                <div class="mobile-form-group">
+                                    <label for="author" class="mobile-form-label">Author Name *</label>
+                                    <input type="text" class="mobile-form-control" id="author" name="author" required
+                                           placeholder="Enter author name">
+                                </div>
+                                
+                                <div class="mobile-form-group">
+                                    <label for="spine_text" class="mobile-form-label">Spine Text</label>
+                                    <input type="text" class="mobile-form-control" id="spine_text" name="spine_text"
+                                           placeholder="Text for book spine (optional)">
+                                </div>
+                                
+                                <div class="mobile-form-group">
+                                    <label for="back_cover_text" class="mobile-form-label">Back Cover Description</label>
+                                    <textarea class="mobile-form-control" id="back_cover_text" name="back_cover_text" rows="4"
+                                              placeholder="Book description, author bio, or other back cover text (optional)" style="min-height: 120px; resize: vertical;"></textarea>
+                                    <div style="color: rgba(255, 255, 255, 0.6); font-size: 14px; margin-top: 8px;">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        This text will be overlaid on the back cover image
                                     </div>
                                 </div>
                             </div>
@@ -159,39 +169,41 @@
                             <hr class="my-4">
 
                             <!-- Book Specifications -->
-                            <div class="mb-4">
-                                <h5 class="mb-3">
-                                    <i class="fas fa-ruler me-2 text-primary"></i>
-                                    Book Specifications
-                                </h5>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="trim_size" class="form-label">Trim Size</label>
-                                        <select class="form-select" id="trim_size" name="trim_size">
-                                            <option value="6x9" selected>6" × 9" (Most Popular)</option>
-                                            <option value="5x8">5" × 8"</option>
-                                            <option value="5.25x8">5.25" × 8"</option>
-                                            <option value="5.5x8.5">5.5" × 8.5"</option>
-                                            <option value="6.14x9.21">6.14" × 9.21" (A5)</option>
-                                            <option value="6.69x9.61">6.69" × 9.61"</option>
-                                            <option value="7x10">7" × 10"</option>
-                                            <option value="7.44x9.69">7.44" × 9.69" (B5)</option>
-                                            <option value="7.5x9.25">7.5" × 9.25"</option>
-                                            <option value="8x10">8" × 10"</option>
-                                            <option value="8.25x6">8.25" × 6"</option>
-                                            <option value="8.25x8.25">8.25" × 8.25"</option>
-                                            <option value="8.5x8.5">8.5" × 8.5"</option>
-                                            <option value="8.5x11">8.5" × 11"</option>
-                                        </select>
+                            <div class="mobile-form-group">
+                                <div class="mobile-section-header">
+                                    <div class="mobile-section-icon">
+                                        <i class="fas fa-ruler"></i>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="page_count" class="form-label">Page Count</label>
-                                        <input type="number" class="form-control" id="page_count" name="page_count" 
-                                               value="100" min="24" max="800" required>
-                                        <div class="form-text">
-                                            <i class="fas fa-info-circle me-1"></i>
-                                            Used to calculate spine width
-                                        </div>
+                                    <h5 class="mobile-section-title">Book Specifications</h5>
+                                </div>
+                                
+                                <div class="mobile-form-group">
+                                    <label for="trim_size" class="mobile-form-label">Trim Size</label>
+                                    <select class="mobile-form-control" id="trim_size" name="trim_size">
+                                        <option value="6x9" selected>6" × 9" (Most Popular)</option>
+                                        <option value="5x8">5" × 8"</option>
+                                        <option value="5.25x8">5.25" × 8"</option>
+                                        <option value="5.5x8.5">5.5" × 8.5"</option>
+                                        <option value="6.14x9.21">6.14" × 9.21" (A5)</option>
+                                        <option value="6.69x9.61">6.69" × 9.61"</option>
+                                        <option value="7x10">7" × 10"</option>
+                                        <option value="7.44x9.69">7.44" × 9.69" (B5)</option>
+                                        <option value="7.5x9.25">7.5" × 9.25"</option>
+                                        <option value="8x10">8" × 10"</option>
+                                        <option value="8.25x6">8.25" × 6"</option>
+                                        <option value="8.25x8.25">8.25" × 8.25"</option>
+                                        <option value="8.5x8.5">8.5" × 8.5"</option>
+                                        <option value="8.5x11">8.5" × 11"</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mobile-form-group">
+                                    <label for="page_count" class="mobile-form-label">Page Count</label>
+                                    <input type="number" class="mobile-form-control" id="page_count" name="page_count" 
+                                           value="100" min="24" max="800" required>
+                                    <div style="color: rgba(255, 255, 255, 0.6); font-size: 14px; margin-top: 8px;">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Used to calculate spine width
                                     </div>
                                 </div>
                             </div>
@@ -199,36 +211,42 @@
                             <hr class="my-4">
 
                             <!-- Text Styling -->
-                            <div class="mb-4">
-                                <h5 class="mb-3">
-                                    <i class="fas fa-font me-2 text-primary"></i>
-                                    Text Styling
-                                </h5>
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label for="title_font_size" class="form-label">Title Font Size</label>
-                                        <input type="range" class="form-range" id="title_font_size" name="title_font_size" 
-                                               min="20" max="80" value="48" oninput="updateFontSizeDisplay('title')">
-                                        <div class="d-flex justify-content-between">
-                                            <small class="text-muted">20px</small>
-                                            <span id="titleFontSize" class="badge bg-secondary">48px</span>
-                                            <small class="text-muted">80px</small>
-                                        </div>
+                            <div class="mobile-form-group">
+                                <div class="mobile-section-header">
+                                    <div class="mobile-section-icon">
+                                        <i class="fas fa-font"></i>
                                     </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label for="author_font_size" class="form-label">Author Font Size</label>
-                                        <input type="range" class="form-range" id="author_font_size" name="author_font_size" 
-                                               min="12" max="40" value="24" oninput="updateFontSizeDisplay('author')">
-                                        <div class="d-flex justify-content-between">
-                                            <small class="text-muted">12px</small>
-                                            <span id="authorFontSize" class="badge bg-secondary">24px</span>
-                                            <small class="text-muted">40px</small>
-                                        </div>
+                                    <h5 class="mobile-section-title">Text Styling</h5>
+                                </div>
+                                
+                                <div class="mobile-form-group">
+                                    <label for="title_font_size" class="mobile-form-label">Title Font Size</label>
+                                    <input type="range" class="mobile-range" id="title_font_size" name="title_font_size" 
+                                           min="20" max="80" value="48" oninput="updateFontSizeDisplay('title')">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                                        <span style="color: rgba(255, 255, 255, 0.6); font-size: 14px;">20px</span>
+                                        <span id="titleFontSize" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; padding: 6px 12px; border-radius: 12px; font-weight: 600; font-size: 14px;">48px</span>
+                                        <span style="color: rgba(255, 255, 255, 0.6); font-size: 14px;">80px</span>
                                     </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label for="text_color" class="form-label">Text Color</label>
-                                        <input type="color" class="form-control form-control-color" id="text_color" 
+                                </div>
+                                
+                                <div class="mobile-form-group">
+                                    <label for="author_font_size" class="mobile-form-label">Author Font Size</label>
+                                    <input type="range" class="mobile-range" id="author_font_size" name="author_font_size" 
+                                           min="12" max="40" value="24" oninput="updateFontSizeDisplay('author')">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                                        <span style="color: rgba(255, 255, 255, 0.6); font-size: 14px;">12px</span>
+                                        <span id="authorFontSize" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; padding: 6px 12px; border-radius: 12px; font-weight: 600; font-size: 14px;">24px</span>
+                                        <span style="color: rgba(255, 255, 255, 0.6); font-size: 14px;">40px</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mobile-form-group">
+                                    <label for="text_color" class="mobile-form-label">Text Color</label>
+                                    <div style="display: flex; align-items: center; gap: 16px;">
+                                        <input type="color" class="mobile-color-picker" id="text_color" 
                                                name="text_color" value="#FFFFFF" title="Choose text color">
+                                        <span style="color: #e0e0e0; font-size: 16px;">Tap to choose color</span>
                                     </div>
                                 </div>
                             </div>
@@ -236,39 +254,28 @@
                             <hr class="my-4">
 
                             <!-- Submit Button -->
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary btn-lg" id="generateBtn">
-                                    <i class="fas fa-cogs me-2"></i>
-                                    Generate KDP Cover
-                                </button>
-                            </div>
+                            <div class="mobile-spacer"></div>
+                            <button type="submit" class="mobile-btn" id="generateBtn">
+                                <i class="fas fa-cogs me-2"></i>
+                                Generate KDP Cover
+                            </button>
 
                             <!-- Download Button (hidden by default) -->
-                            <div class="d-grid mt-3" id="downloadContainer" style="display: none !important;">
-                                <button type="button" class="btn btn-success btn-lg" id="downloadBtn">
+                            <div id="downloadContainer" style="display: none !important; margin-top: 16px;">
+                                <button type="button" class="mobile-btn mobile-btn-success" id="downloadBtn">
                                     <i class="fas fa-download me-2"></i>
                                     Download KDP Cover
                                 </button>
                             </div>
 
                             <!-- Progress Bar (hidden by default) -->
-                            <div class="mt-3" id="progressContainer" style="display: none;">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="text-muted">Generating your cover...</span>
-                                    <span class="text-primary fw-bold" id="progressPercent">0%</span>
+                            <div id="progressContainer" style="display: none; margin-top: 24px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <span style="color: rgba(255, 255, 255, 0.8); font-size: 16px; font-weight: 500;" id="progressStatus">Generating your cover...</span>
+                                    <span style="color: #007bff; font-weight: 700; font-size: 16px;" id="progressPercent">0%</span>
                                 </div>
-                                <div class="progress" style="height: 8px;">
-                                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                                         role="progressbar" 
-                                         id="progressBar" 
-                                         style="width: 0%;" 
-                                         aria-valuenow="0" 
-                                         aria-valuemin="0" 
-                                         aria-valuemax="100">
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    <small class="text-muted" id="progressStatus">Preparing files...</small>
+                                <div class="mobile-progress">
+                                    <div class="mobile-progress-bar" id="progressBar" style="width: 0%;"></div>
                                 </div>
                             </div>
 
@@ -279,44 +286,74 @@
         </div>
 
         <!-- Information Section -->
-        <div class="row mt-5">
-            <div class="col-12">
-                <div class="card border-info">
-                    <div class="card-header bg-info">
-                        <h5 class="card-title mb-0 text-white">
-                            <i class="fas fa-lightbulb me-2"></i>
-                            KDP Cover Requirements
-                        </h5>
+        <div class="mobile-spacer-lg"></div>
+        <div class="mobile-card">
+            <div class="mobile-card-header">
+                <div class="mobile-section-header" style="border: none; padding: 0; margin: 0;">
+                    <div class="mobile-section-icon">
+                        <i class="fas fa-lightbulb"></i>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6><i class="fas fa-check-circle text-success me-2"></i>What this tool provides:</h6>
-                                <ul class="list-unstyled ms-3">
-                                    <li><i class="fas fa-arrow-right text-muted me-2"></i>Complete wraparound cover (front + spine + back)</li>
-                                    <li><i class="fas fa-arrow-right text-muted me-2"></i>Intelligent image extension and enhancement</li>
-                                    <li><i class="fas fa-arrow-right text-muted me-2"></i>0.125" bleed margins on all sides</li>
-                                    <li><i class="fas fa-arrow-right text-muted me-2"></i>Automatic spine width calculation</li>
-                                    <li><i class="fas fa-arrow-right text-muted me-2"></i>300 DPI high-resolution PDF output</li>
-                                    <li><i class="fas fa-arrow-right text-muted me-2"></i>Safe text area positioning</li>
-                                    <li><i class="fas fa-arrow-right text-muted me-2"></i>KDP-compliant dimensions</li>
-                                </ul>
-                            </div>
-                            <div class="col-md-6">
-                                <h6><i class="fas fa-info-circle text-info me-2"></i>Tips for best results:</h6>
-                                <ul class="list-unstyled ms-3">
-                                    <li><i class="fas fa-arrow-right text-muted me-2"></i>Any image size works - automatic enhancement applied</li>
-                                    <li><i class="fas fa-arrow-right text-muted me-2"></i>Choose contrasting text colors for readability</li>
-                                    <li><i class="fas fa-arrow-right text-muted me-2"></i>Upload highest quality images available</li>
-                                    <li><i class="fas fa-arrow-right text-muted me-2"></i>Test your cover at thumbnail size</li>
-                                    <li><i class="fas fa-arrow-right text-muted me-2"></i>Add descriptive back cover text for better appeal</li>
-                                </ul>
-                            </div>
+                    <h5 class="mobile-section-title">KDP Cover Requirements</h5>
+                </div>
+            </div>
+            <div class="mobile-card-body">
+                <div class="mobile-form-group">
+                    <h6 style="color: #28a745; font-weight: 600; margin-bottom: 16px;">
+                        <i class="fas fa-check-circle me-2"></i>What this tool provides:
+                    </h6>
+                    <div style="margin-left: 16px;">
+                        <div style="color: rgba(255, 255, 255, 0.8); font-size: 15px; line-height: 1.6; margin-bottom: 8px;">
+                            <i class="fas fa-arrow-right me-2" style="color: #007bff;"></i>Complete wraparound cover (front + spine + back)
+                        </div>
+                        <div style="color: rgba(255, 255, 255, 0.8); font-size: 15px; line-height: 1.6; margin-bottom: 8px;">
+                            <i class="fas fa-arrow-right me-2" style="color: #007bff;"></i>Intelligent image extension and enhancement
+                        </div>
+                        <div style="color: rgba(255, 255, 255, 0.8); font-size: 15px; line-height: 1.6; margin-bottom: 8px;">
+                            <i class="fas fa-arrow-right me-2" style="color: #007bff;"></i>0.125" bleed margins on all sides
+                        </div>
+                        <div style="color: rgba(255, 255, 255, 0.8); font-size: 15px; line-height: 1.6; margin-bottom: 8px;">
+                            <i class="fas fa-arrow-right me-2" style="color: #007bff;"></i>Automatic spine width calculation
+                        </div>
+                        <div style="color: rgba(255, 255, 255, 0.8); font-size: 15px; line-height: 1.6; margin-bottom: 8px;">
+                            <i class="fas fa-arrow-right me-2" style="color: #007bff;"></i>300 DPI high-resolution PDF output
+                        </div>
+                        <div style="color: rgba(255, 255, 255, 0.8); font-size: 15px; line-height: 1.6; margin-bottom: 8px;">
+                            <i class="fas fa-arrow-right me-2" style="color: #007bff;"></i>Safe text area positioning
+                        </div>
+                        <div style="color: rgba(255, 255, 255, 0.8); font-size: 15px; line-height: 1.6;">
+                            <i class="fas fa-arrow-right me-2" style="color: #007bff;"></i>KDP-compliant dimensions
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mobile-spacer"></div>
+                
+                <div class="mobile-form-group">
+                    <h6 style="color: #17a2b8; font-weight: 600; margin-bottom: 16px;">
+                        <i class="fas fa-info-circle me-2"></i>Tips for best results:
+                    </h6>
+                    <div style="margin-left: 16px;">
+                        <div style="color: rgba(255, 255, 255, 0.8); font-size: 15px; line-height: 1.6; margin-bottom: 8px;">
+                            <i class="fas fa-arrow-right me-2" style="color: #007bff;"></i>Any image size works - automatic enhancement applied
+                        </div>
+                        <div style="color: rgba(255, 255, 255, 0.8); font-size: 15px; line-height: 1.6; margin-bottom: 8px;">
+                            <i class="fas fa-arrow-right me-2" style="color: #007bff;"></i>Choose contrasting text colors for readability
+                        </div>
+                        <div style="color: rgba(255, 255, 255, 0.8); font-size: 15px; line-height: 1.6; margin-bottom: 8px;">
+                            <i class="fas fa-arrow-right me-2" style="color: #007bff;"></i>Upload highest quality images available
+                        </div>
+                        <div style="color: rgba(255, 255, 255, 0.8); font-size: 15px; line-height: 1.6; margin-bottom: 8px;">
+                            <i class="fas fa-arrow-right me-2" style="color: #007bff;"></i>Test your cover at thumbnail size
+                        </div>
+                        <div style="color: rgba(255, 255, 255, 0.8); font-size: 15px; line-height: 1.6;">
+                            <i class="fas fa-arrow-right me-2" style="color: #007bff;"></i>Add descriptive back cover text for better appeal
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        
+        <div class="mobile-spacer-lg"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
