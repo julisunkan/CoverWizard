@@ -1,0 +1,125 @@
+/* Custom styles for KDP Cover Creator */
+
+/* Form enhancements */
+.form-range {
+    height: 0.5rem;
+}
+
+.form-control-color {
+    height: 38px;
+    width: 60px;
+    padding: 2px;
+}
+
+/* Card styling */
+.card {
+    border: none;
+    border-radius: 12px;
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+    background: var(--bs-primary);
+    color: white;
+    border: none;
+}
+
+/* Button enhancements */
+.btn-lg {
+    padding: 12px 24px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+}
+
+/* Loading state */
+.btn:disabled {
+    opacity: 0.7;
+}
+
+/* Alert styling */
+.alert {
+    border-radius: 8px;
+    border: none;
+}
+
+/* Typography */
+.display-4 {
+    font-weight: 700;
+}
+
+.lead {
+    font-size: 1.1rem;
+}
+
+/* Badge styling */
+.badge {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+}
+
+/* Form text styling */
+.form-text {
+    font-size: 0.85rem;
+}
+
+/* Custom range slider styling */
+.form-range::-webkit-slider-thumb {
+    background: var(--bs-primary);
+}
+
+.form-range::-moz-range-thumb {
+    background: var(--bs-primary);
+    border: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .btn-lg {
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+}
+
+/* Loading animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.fa-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Info cards */
+.border-info {
+    border-color: var(--bs-info) !important;
+}
+
+.bg-info {
+    background-color: var(--bs-info) !important;
+}
+
+/* List styling */
+.list-unstyled li {
+    padding: 2px 0;
+}
+
+/* Color picker styling */
+input[type="color"] {
+    border: 2px solid var(--bs-border-color);
+    cursor: pointer;
+}
+
+input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
+input[type="color"]::-moz-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
