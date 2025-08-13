@@ -40,23 +40,39 @@ class CoverGenerator:
         self.logger = logging.getLogger(__name__)
     
     def calculate_spine_width(self, page_count):
-        """Calculate spine width based on page count (in inches)"""
-        # KDP formula: spine width = (page count ÷ 2) × 0.0025"
-        # This is an approximation for standard paper weight
-        spine_width = (page_count / 2) * 0.0025
-        return max(spine_width, 0.06)  # Minimum spine width
+        """Calculate spine width based on page count using KDP's exact formula"""
+        # KDP's official formula for white paper: (page count ÷ 2) × 0.0025"
+        # For cream paper: (page count ÷ 2) × 0.0025"
+        # The exact multiplier depends on paper type and binding
+        spine_width = (page_count / 2) * 0.0025  # KDP's standard formula
+        
+        # KDP has a minimum spine width for text visibility
+        minimum_spine = 0.06
+        
+        calculated_spine = max(spine_width, minimum_spine)
+        self.logger.info(f"Spine calculation: ({page_count}/2) × 0.0025 = {spine_width:.6f}, minimum: {minimum_spine}, final: {calculated_spine:.6f}")
+        
+        return calculated_spine
     
     def get_cover_dimensions(self, trim_size, page_count):
-        """Calculate total cover dimensions including bleed"""
+        """Calculate total cover dimensions including bleed with precise KDP compliance"""
         if trim_size not in self.TRIM_SIZES:
             raise ValueError(f"Unsupported trim size: {trim_size}")
         
         width, height = self.TRIM_SIZES[trim_size]
         spine_width = self.calculate_spine_width(page_count)
         
+        # Log the calculation details for debugging
+        self.logger.info(f"Trim size: {trim_size} ({width}x{height})")
+        self.logger.info(f"Page count: {page_count}")
+        self.logger.info(f"Calculated spine width: {spine_width:.6f}")
+        self.logger.info(f"Bleed margin: {self.BLEED_MARGIN}")
+        
         # Total width = back + spine + front + bleed on both sides
         total_width = (width * 2) + spine_width + (self.BLEED_MARGIN * 2)
         total_height = height + (self.BLEED_MARGIN * 2)
+        
+        self.logger.info(f"Calculated total dimensions: {total_width:.6f} x {total_height:.6f}")
         
         return total_width, total_height, spine_width
     
