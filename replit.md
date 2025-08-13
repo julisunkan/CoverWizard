@@ -8,6 +8,13 @@ The application now features complete PWA functionality with offline support, in
 
 Preferred communication style: Simple, everyday language.
 
+# Recent Changes (August 13, 2025)
+- Migrated from Replit Agent to Replit environment
+- Modified download behavior: PDF no longer downloads automatically after generation
+- Added "Download KDP Cover" button that appears after successful cover generation
+- User must click the download button to receive the PDF file
+- Maintained all PWA functionality and offline capabilities
+
 # System Architecture
 
 ## Frontend Architecture

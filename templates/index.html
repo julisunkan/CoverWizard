@@ -243,6 +243,14 @@
                                 </button>
                             </div>
 
+                            <!-- Download Button (hidden by default) -->
+                            <div class="d-grid mt-3" id="downloadContainer" style="display: none;">
+                                <button type="button" class="btn btn-success btn-lg" id="downloadBtn">
+                                    <i class="fas fa-download me-2"></i>
+                                    Download KDP Cover
+                                </button>
+                            </div>
+
                             <!-- Progress Bar (hidden by default) -->
                             <div class="mt-3" id="progressContainer" style="display: none;">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -351,7 +359,9 @@
                 return false;
             }
             
-            // Show progress bar and update button
+            // Hide download button if visible and show progress bar
+            const downloadContainer = document.getElementById('downloadContainer');
+            downloadContainer.style.display = 'none';
             progressContainer.style.display = 'block';
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
             submitBtn.disabled = true;
@@ -394,28 +404,40 @@
             })
             .then(data => {
                 if (data.success) {
-                    // Complete progress and trigger download
+                    // Complete progress and show download button
                     completeProgress();
                     
-                    // Create download link with direct URL
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    
-                    // Use direct HTTP URL instead of blob
+                    // Store download information for the button
                     const title = formData.get('title') || 'cover';
                     const cleanTitle = title.replace(/[^a-zA-Z0-9]/g, '_');
-                    a.href = `${data.download_url}?title=${encodeURIComponent(cleanTitle)}_cover.pdf`;
-                    a.download = data.filename || `${cleanTitle}_cover.pdf`;
+                    const downloadUrl = `${data.download_url}?title=${encodeURIComponent(cleanTitle)}_cover.pdf`;
+                    const filename = data.filename || `${cleanTitle}_cover.pdf`;
                     
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    
-                    // Reset UI after download
+                    // Show download button and hide progress
                     setTimeout(() => {
-                        resetProgressUI(submitBtn, originalText, progressContainer);
+                        progressContainer.style.display = 'none';
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                        
+                        // Show download button
+                        const downloadContainer = document.getElementById('downloadContainer');
+                        const downloadBtn = document.getElementById('downloadBtn');
+                        
+                        downloadContainer.style.display = 'block';
+                        
+                        // Set up download button click handler
+                        downloadBtn.onclick = function() {
+                            const a = document.createElement('a');
+                            a.style.display = 'none';
+                            a.href = downloadUrl;
+                            a.download = filename;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                        };
+                        
                         showSuccessMessage(data.message);
-                    }, 1000);
+                    }, 500);
                 } else {
                     throw new Error(data.message || 'Cover generation failed');
                 }
