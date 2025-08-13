@@ -239,23 +239,55 @@ class CoverGenerator:
             self.logger.error(f"Error loading image {image_path}: {str(e)}")
             raise
     
-    def get_font(self, size):
-        """Get font for text rendering"""
+    def get_font(self, size, bold=False):
+        """Get font for text rendering with better font selection"""
         try:
-            # Try to use a system font
-            return ImageFont.truetype("/System/Library/Fonts/Arial.ttf", size)
+            # Try to find system fonts that look professional
+            font_paths = [
+                "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 
+                "/System/Library/Fonts/Helvetica.ttc",
+                "/System/Library/Fonts/Arial.ttf",
+                "arial.ttf",
+                "helvetica.ttf"
+            ]
+            
+            for font_path in font_paths:
+                try:
+                    return ImageFont.truetype(font_path, size)
+                except:
+                    continue
+                    
+            # Fallback to default font
+            return ImageFont.load_default()
         except:
-            try:
-                return ImageFont.truetype("arial.ttf", size)
-            except:
-                # Fallback to default font
-                return ImageFont.load_default()
+            return ImageFont.load_default()
     
-    def draw_text_centered(self, draw, text, position, font, fill, max_width=None):
-        """Draw text centered at position with optional width constraint"""
+    def draw_text_with_effects(self, draw, text, position, font, fill, max_width=None, shadow=True, outline=True):
+        """Draw text with professional effects like shadows and outlines"""
         if not text.strip():
             return
             
+        # Parse color for calculations
+        if isinstance(fill, str) and fill.startswith('#'):
+            fill = fill[1:]
+            fill_rgb = tuple(int(fill[i:i+2], 16) for i in (0, 2, 4))
+        elif isinstance(fill, tuple):
+            fill_rgb = fill
+        else:
+            fill_rgb = (255, 255, 255)
+        
+        # Calculate contrast color for outline/shadow
+        brightness = sum(fill_rgb) / 3
+        if brightness > 128:
+            # Light text gets dark outline/shadow
+            outline_color = (0, 0, 0)
+            shadow_color = (0, 0, 0, 180)
+        else:
+            # Dark text gets light outline/shadow
+            outline_color = (255, 255, 255)
+            shadow_color = (255, 255, 255, 180)
+        
         # If max_width is specified, wrap text if necessary
         if max_width:
             words = text.split()
@@ -281,17 +313,35 @@ class CoverGenerator:
         
         # Calculate total height for vertical centering
         line_height = font.getbbox('Ay')[3] - font.getbbox('Ay')[1]
-        total_height = len(lines) * line_height
+        total_height = len(lines) * line_height * 1.2  # Add some line spacing
         
-        # Draw each line
+        # Draw each line with effects
         for i, line in enumerate(lines):
             bbox = draw.textbbox((0, 0), line, font=font)
             text_width = bbox[2] - bbox[0]
             
             x = position[0] - text_width // 2
-            y = position[1] - total_height // 2 + i * line_height
+            y = position[1] - total_height // 2 + i * line_height * 1.2
             
-            draw.text((x, y), line, font=font, fill=fill)
+            # Draw shadow
+            if shadow:
+                shadow_offset = max(2, font.size // 20)
+                draw.text((x + shadow_offset, y + shadow_offset), line, font=font, fill=shadow_color)
+            
+            # Draw outline
+            if outline:
+                outline_width = max(1, font.size // 30)
+                for dx in range(-outline_width, outline_width + 1):
+                    for dy in range(-outline_width, outline_width + 1):
+                        if dx != 0 or dy != 0:
+                            draw.text((x + dx, y + dy), line, font=font, fill=outline_color)
+            
+            # Draw main text
+            draw.text((x, y), line, font=font, fill=fill_rgb)
+
+    def draw_text_centered(self, draw, text, position, font, fill, max_width=None):
+        """Draw text centered at position with professional effects"""
+        self.draw_text_with_effects(draw, text, position, font, fill, max_width, shadow=True, outline=True)
     
     def generate_cover(self, front_image_path, book_data, output_path, back_image_path=None):
         """Generate complete KDP wraparound cover"""
@@ -391,7 +441,7 @@ class CoverGenerator:
             return False
     
     def add_front_cover_text(self, draw, book_data, x, y, width, height):
-        """Add title, subtitle, and author text to front cover"""
+        """Add title, subtitle, and author text to front cover with professional positioning"""
         try:
             # Parse color
             color = book_data['text_color']
@@ -399,48 +449,58 @@ class CoverGenerator:
                 color = color[1:]
             color_rgb = tuple(int(color[i:i+2], 16) for i in (0, 2, 4))
             
-            # Calculate positions (divide front cover into sections)
-            title_y = y + height // 4
-            subtitle_y = title_y + int(book_data['title_font_size'] * 1.5)
-            author_y = y + height - height // 4
+            # Better positioning for professional appearance
+            # Title in upper third, author in lower section
+            title_area_height = height // 3
+            author_area_height = height // 6
             
-            # Title
-            title_font = self.get_font(book_data['title_font_size'])
+            # Calculate vertical positions with better spacing
+            title_y = y + title_area_height // 2
+            author_y = y + height - author_area_height
+            
+            # Title with bold font
+            title_font = self.get_font(book_data['title_font_size'], bold=True)
             self.draw_text_centered(
                 draw, book_data['title'], 
                 (x + width // 2, title_y), 
-                title_font, color_rgb, width
+                title_font, color_rgb, int(width * 0.9)  # Leave some margin
             )
             
-            # Subtitle
+            # Subtitle positioning - right after title
             if book_data['subtitle'].strip():
-                subtitle_font = self.get_font(book_data['title_font_size'] // 2)
+                # Calculate title height to position subtitle correctly
+                title_bbox = draw.textbbox((0, 0), book_data['title'], font=title_font)
+                title_height = title_bbox[3] - title_bbox[1]
+                
+                subtitle_y = title_y + title_height + 20  # Add some spacing
+                subtitle_font = self.get_font(max(book_data['title_font_size'] // 2, 16))
                 self.draw_text_centered(
                     draw, book_data['subtitle'], 
                     (x + width // 2, subtitle_y), 
-                    subtitle_font, color_rgb, width
+                    subtitle_font, color_rgb, int(width * 0.9)
                 )
             
-            # Author
-            author_font = self.get_font(book_data['author_font_size'])
+            # Author name at bottom with larger, more prominent styling
+            author_font = self.get_font(max(book_data['author_font_size'], 20), bold=True)
             self.draw_text_centered(
-                draw, book_data['author'], 
+                draw, f"by {book_data['author']}", 
                 (x + width // 2, author_y), 
-                author_font, color_rgb, width
+                author_font, color_rgb, int(width * 0.8)
             )
             
         except Exception as e:
             self.logger.error(f"Error adding front cover text: {str(e)}")
     
     def add_spine_text(self, draw, book_data, x, y, width, height):
-        """Add rotated text to spine"""
+        """Add rotated text to spine with professional formatting"""
         try:
-            if not book_data['spine_text'].strip():
+            spine_text = book_data['spine_text'].strip()
+            if not spine_text:
                 return
                 
             # Calculate appropriate font size for spine
-            spine_font_size = max(min(int(width * 0.6), 20), 8)
-            font = self.get_font(spine_font_size)
+            spine_font_size = max(min(int(width * 0.7), 24), 10)
+            font = self.get_font(spine_font_size, bold=True)
             
             # Parse color
             color = book_data['text_color']
@@ -448,32 +508,56 @@ class CoverGenerator:
                 color = color[1:]
             color_rgb = tuple(int(color[i:i+2], 16) for i in (0, 2, 4))
             
-            # Create temporary image for the text
-            temp_img = Image.new('RGBA', (height, width), (0, 0, 0, 0))
+            # Create larger temporary image for better text rendering
+            temp_size_multiplier = 3  # Higher resolution for better quality
+            temp_width = height * temp_size_multiplier
+            temp_height = width * temp_size_multiplier
+            temp_img = Image.new('RGBA', (temp_width, temp_height), (0, 0, 0, 0))
             temp_draw = ImageDraw.Draw(temp_img)
             
+            # Scale font for high resolution
+            hires_font = self.get_font(spine_font_size * temp_size_multiplier, bold=True)
+            
             # Get text dimensions
-            bbox = temp_draw.textbbox((0, 0), book_data['spine_text'], font=font)
+            bbox = temp_draw.textbbox((0, 0), spine_text, font=hires_font)
             text_width = bbox[2] - bbox[0]
             text_height = bbox[3] - bbox[1]
             
             # Center the text in the temporary image
-            text_x = (height - text_width) // 2
-            text_y = (width - text_height) // 2
+            text_x = (temp_width - text_width) // 2
+            text_y = (temp_height - text_height) // 2
             
-            # Draw text on temporary image
-            temp_draw.text((text_x, text_y), book_data['spine_text'], font=font, fill=color_rgb)
+            # Draw text with effects on high-res temporary image
+            # Draw shadow first
+            shadow_offset = max(3, spine_font_size // 10) * temp_size_multiplier
+            temp_draw.text((text_x + shadow_offset, text_y + shadow_offset), spine_text, 
+                          font=hires_font, fill=(0, 0, 0, 180))
+            
+            # Draw outline
+            outline_width = max(2, spine_font_size // 15) * temp_size_multiplier
+            for dx in range(-outline_width, outline_width + 1):
+                for dy in range(-outline_width, outline_width + 1):
+                    if dx != 0 or dy != 0:
+                        temp_draw.text((text_x + dx, text_y + dy), spine_text, 
+                                     font=hires_font, fill=(0, 0, 0))
+            
+            # Draw main text
+            temp_draw.text((text_x, text_y), spine_text, font=hires_font, fill=color_rgb)
             
             # Rotate the text image 90 degrees counterclockwise
             rotated_img = temp_img.rotate(90, expand=True)
+            
+            # Scale back down to target size
+            final_width = rotated_img.width // temp_size_multiplier
+            final_height = rotated_img.height // temp_size_multiplier
+            rotated_img = rotated_img.resize((final_width, final_height), Image.Resampling.LANCZOS)
             
             # Calculate position to center the rotated text on the spine
             spine_center_x = x + width // 2
             spine_center_y = y + height // 2
             
-            rotated_width, rotated_height = rotated_img.size
-            paste_x = spine_center_x - rotated_width // 2
-            paste_y = spine_center_y - rotated_height // 2
+            paste_x = spine_center_x - final_width // 2
+            paste_y = spine_center_y - final_height // 2
             
             # Create a copy of the current image to work with
             current_img = draw._image.copy()
@@ -491,7 +575,7 @@ class CoverGenerator:
             self.logger.error(f"Error adding spine text: {str(e)}")
     
     def add_back_cover_text(self, draw, book_data, x, y, width, height):
-        """Add description text to back cover"""
+        """Add description text to back cover with professional formatting"""
         try:
             back_text = book_data.get('back_cover_text', '').strip()
             if not back_text:
@@ -503,13 +587,15 @@ class CoverGenerator:
                 color = color[1:]
             color_rgb = tuple(int(color[i:i+2], 16) for i in (0, 2, 4))
             
-            # Use a smaller font for back cover description
-            desc_font_size = max(book_data['author_font_size'] - 4, 12)
+            # Use readable font size for back cover
+            desc_font_size = max(book_data['author_font_size'] - 2, 14)
             font = self.get_font(desc_font_size)
             
-            # Position text in upper portion of back cover
-            text_y_start = y + height // 8
+            # Position text in middle section of back cover, leaving space for other elements
+            text_y_start = y + height // 4
             text_area_height = height // 2
+            text_width = int(width * 0.85)  # Leave margins
+            text_x_start = x + (width - text_width) // 2
             
             # Split text into paragraphs and wrap lines
             paragraphs = back_text.split('\n')
@@ -527,7 +613,7 @@ class CoverGenerator:
                         bbox = draw.textbbox((0, 0), test_line, font=font)
                         line_width = bbox[2] - bbox[0]
                         
-                        if line_width <= width or not current_line:
+                        if line_width <= text_width or not current_line:
                             current_line.append(word)
                         else:
                             if current_line:
@@ -544,24 +630,28 @@ class CoverGenerator:
             if all_lines and all_lines[-1] == '':
                 all_lines.pop()
             
-            # Calculate line height and total text height
-            line_height = font.getbbox('Ay')[3] - font.getbbox('Ay')[1] + 4
+            # Calculate line height with better spacing
+            line_height = int((font.getbbox('Ay')[3] - font.getbbox('Ay')[1]) * 1.4)
             total_text_height = len(all_lines) * line_height
             
-            # Center text vertically in the available area
-            start_y = text_y_start + (text_area_height - total_text_height) // 2
+            # Position text in the available area
+            start_y = text_y_start + max(0, (text_area_height - total_text_height) // 2)
             
-            # Draw each line
+            # Draw each line with professional formatting
             for i, line in enumerate(all_lines):
                 if line.strip():  # Skip empty lines
-                    bbox = draw.textbbox((0, 0), line, font=font)
-                    text_width = bbox[2] - bbox[0]
-                    
-                    # Center align text
-                    line_x = x + (width - text_width) // 2
+                    line_x = text_x_start
                     line_y = start_y + i * line_height
                     
-                    draw.text((line_x, line_y), line, font=font, fill=color_rgb)
+                    # Use text effects for better visibility
+                    self.draw_text_with_effects(
+                        draw, line, 
+                        (line_x + text_width // 2, line_y), 
+                        font, color_rgb, 
+                        max_width=text_width,
+                        shadow=True, 
+                        outline=True
+                    )
             
         except Exception as e:
             self.logger.error(f"Error adding back cover text: {str(e)}")
