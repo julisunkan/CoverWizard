@@ -87,24 +87,24 @@
                                 
                                 <div class="mobile-form-group">
                                     <label for="front_cover_image" class="mobile-form-label">Front Cover Image *</label>
-                                    <div class="mobile-file-upload">
-                                        <input type="file" id="front_cover_image" name="front_cover_image" accept="image/*" required>
+                                    <div class="mobile-file-upload" onclick="document.getElementById('front_cover_image').click()">
+                                        <input type="file" id="front_cover_image" name="front_cover_image" accept="image/*" required style="display: none;">
                                         <div class="mobile-file-icon">
                                             <i class="fas fa-image"></i>
                                         </div>
-                                        <div class="mobile-file-text">Tap to select front cover</div>
+                                        <div class="mobile-file-text" id="front-file-text">Tap to select front cover</div>
                                         <div class="mobile-file-subtext">Main cover image for the front</div>
                                     </div>
                                 </div>
                                 
                                 <div class="mobile-form-group">
                                     <label for="back_cover_image" class="mobile-form-label">Back Cover Image</label>
-                                    <div class="mobile-file-upload">
-                                        <input type="file" id="back_cover_image" name="back_cover_image" accept="image/*">
+                                    <div class="mobile-file-upload" onclick="document.getElementById('back_cover_image').click()">
+                                        <input type="file" id="back_cover_image" name="back_cover_image" accept="image/*" style="display: none;">
                                         <div class="mobile-file-icon">
                                             <i class="fas fa-image"></i>
                                         </div>
-                                        <div class="mobile-file-text">Tap to select back cover</div>
+                                        <div class="mobile-file-text" id="back-file-text">Tap to select back cover</div>
                                         <div class="mobile-file-subtext">Optional back cover image</div>
                                     </div>
                                 </div>
@@ -376,6 +376,21 @@
             const display = document.getElementById(type + 'FontSize');
             display.textContent = slider.value + 'px';
         }
+
+        // File upload handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            // Front cover file handler
+            document.getElementById('front_cover_image').addEventListener('change', function(e) {
+                const fileName = e.target.files[0]?.name || 'Tap to select front cover';
+                document.getElementById('front-file-text').textContent = e.target.files[0] ? fileName : 'Tap to select front cover';
+            });
+
+            // Back cover file handler  
+            document.getElementById('back_cover_image').addEventListener('change', function(e) {
+                const fileName = e.target.files[0]?.name || 'Tap to select back cover';
+                document.getElementById('back-file-text').textContent = e.target.files[0] ? fileName : 'Tap to select back cover';
+            });
+        });
 
         // Progress tracking variables
         let progressInterval;
