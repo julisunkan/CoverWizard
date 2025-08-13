@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, render_template, request, send_file, flash, redirect, url_for
+from flask import Flask, render_template, request, send_file, flash, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
 import uuid
 from cover_generator import CoverGenerator
@@ -165,11 +165,21 @@ def index():
             cleanup_files([front_file_path, back_file_path])
             
             if success:
-                flash('Cover generated successfully!', 'success')
-                return send_file(output_path, as_attachment=True, download_name=f"{book_data['title']}_cover.pdf")
+                # Return JSON response with download URL instead of direct file
+                pdf_filename = os.path.basename(output_path)
+                download_url = f"/download/{pdf_filename}"
+                
+                return jsonify({
+                    'success': True,
+                    'download_url': download_url,
+                    'filename': f"{book_data['title']}_cover.pdf",
+                    'message': 'Cover generated successfully!'
+                })
             else:
-                flash('Error generating cover. Please try again.', 'error')
-                return redirect(request.url)
+                return jsonify({
+                    'success': False,
+                    'message': 'Error generating cover. Please try again.'
+                }), 500
                 
         except Exception as e:
             logging.error(f"Error processing cover generation: {str(e)}")
@@ -207,6 +217,37 @@ def offline():
     except Exception as e:
         logging.error(f"Error serving offline page: {str(e)}")
         return "Offline page not found", 404
+
+@app.route('/download/<filename>')
+def download_pdf(filename):
+    """Serve generated PDF files"""
+    try:
+        # Validate filename to prevent directory traversal
+        if not filename.endswith('.pdf') or '..' in filename or '/' in filename:
+            logging.warning(f"Invalid filename requested: {filename}")
+            return "Invalid filename", 400
+        
+        file_path = os.path.join(app.config['OUTPUT_FOLDER'], filename)
+        
+        if not os.path.exists(file_path):
+            logging.warning(f"PDF file not found: {filename}")
+            return "File not found", 404
+        
+        # Get original book title from request args if available, otherwise use filename
+        download_name = request.args.get('title', filename)
+        if not download_name.endswith('.pdf'):
+            download_name += '.pdf'
+        
+        return send_file(
+            file_path, 
+            as_attachment=True, 
+            download_name=download_name,
+            mimetype='application/pdf'
+        )
+        
+    except Exception as e:
+        logging.error(f"Error serving PDF {filename}: {str(e)}")
+        return "Error serving file", 500
 
 @app.errorhandler(413)
 def too_large(e):
