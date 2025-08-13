@@ -54,17 +54,24 @@ def index():
         back_file_path = None
         
         try:
-            # Check if request has files
-            if not request.files:
+            # Check if request has files - with proper error handling
+            try:
+                files = request.files
+            except Exception as e:
+                logging.error(f"Error accessing request files: {str(e)}")
+                flash('Error processing uploaded files. Please try again.', 'error')
+                return redirect(request.url)
+            
+            if not files:
                 flash('No files uploaded', 'error')
                 return redirect(request.url)
             
             # Validate front cover upload
-            if 'front_cover_image' not in request.files:
+            if 'front_cover_image' not in files:
                 flash('No front cover image selected', 'error')
                 return redirect(request.url)
             
-            front_file = request.files['front_cover_image']
+            front_file = files['front_cover_image']
             if not front_file or front_file.filename == '':
                 flash('No front cover image selected', 'error')
                 return redirect(request.url)
@@ -81,8 +88,8 @@ def index():
             
             # Handle back cover upload (optional)
             back_file_path = None
-            if 'back_cover_image' in request.files:
-                back_file = request.files['back_cover_image']
+            if 'back_cover_image' in files:
+                back_file = files['back_cover_image']
                 if back_file and back_file.filename and back_file.filename != '':
                     if not allowed_file(back_file.filename):
                         flash('Invalid file type for back cover. Please upload PNG, JPG, JPEG, GIF, BMP, or TIFF files.', 'error')
@@ -96,19 +103,26 @@ def index():
                     back_file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_back_filename)
                     back_file.save(back_file_path)
             
-            # Get form data
-            book_data = {
-                'title': request.form.get('title', '').strip(),
-                'subtitle': request.form.get('subtitle', '').strip(),
-                'author': request.form.get('author', '').strip(),
-                'spine_text': request.form.get('spine_text', '').strip(),
-                'back_cover_text': request.form.get('back_cover_text', '').strip(),
-                'page_count': int(request.form.get('page_count', 100)),
-                'trim_size': request.form.get('trim_size', '6x9'),
-                'title_font_size': int(request.form.get('title_font_size', 48)),
-                'author_font_size': int(request.form.get('author_font_size', 24)),
-                'text_color': request.form.get('text_color', '#FFFFFF')
-            }
+            # Get form data with error handling
+            try:
+                form_data = request.form
+                book_data = {
+                    'title': form_data.get('title', '').strip(),
+                    'subtitle': form_data.get('subtitle', '').strip(),
+                    'author': form_data.get('author', '').strip(),
+                    'spine_text': form_data.get('spine_text', '').strip(),
+                    'back_cover_text': form_data.get('back_cover_text', '').strip(),
+                    'page_count': int(form_data.get('page_count', 100)),
+                    'trim_size': form_data.get('trim_size', '6x9'),
+                    'title_font_size': int(form_data.get('title_font_size', 48)),
+                    'author_font_size': int(form_data.get('author_font_size', 24)),
+                    'text_color': form_data.get('text_color', '#FFFFFF')
+                }
+            except (ValueError, TypeError) as e:
+                logging.error(f"Error processing form data: {str(e)}")
+                flash('Invalid form data. Please check your inputs and try again.', 'error')
+                cleanup_files([front_file_path, back_file_path])
+                return redirect(request.url)
             
             # Validate required fields
             if not book_data['title'] or not book_data['author']:
@@ -152,17 +166,38 @@ def index():
 @app.route('/manifest.json')
 def manifest():
     """Serve PWA manifest file"""
-    return send_file('static/manifest.json', mimetype='application/json')
+    try:
+        return send_file('static/manifest.json', mimetype='application/json')
+    except Exception as e:
+        logging.error(f"Error serving manifest: {str(e)}")
+        return "Manifest not found", 404
 
 @app.route('/sw.js')
 def service_worker():
     """Serve service worker file"""
-    return send_file('static/sw.js', mimetype='application/javascript')
+    try:
+        return send_file('static/sw.js', mimetype='application/javascript')
+    except Exception as e:
+        logging.error(f"Error serving service worker: {str(e)}")
+        return "Service worker not found", 404
 
 @app.errorhandler(413)
 def too_large(e):
     """Handle file too large error"""
     flash('File is too large. Maximum size is 16MB.', 'error')
+    return redirect(url_for('index'))
+
+@app.errorhandler(400)
+def bad_request(e):
+    """Handle bad request errors"""
+    flash('Invalid request. Please check your form data and try again.', 'error')
+    return redirect(url_for('index'))
+
+@app.errorhandler(500)
+def internal_error(e):
+    """Handle internal server errors"""
+    logging.error(f"Internal server error: {str(e)}")
+    flash('An internal error occurred. Please try again.', 'error')
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
