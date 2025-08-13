@@ -437,50 +437,17 @@
 
         // PWA Installation and Service Worker
         let deferredPrompt;
-        let installButton;
 
-        // Create install button dynamically
-        function createInstallButton() {
-            if (!installButton && deferredPrompt) {
-                installButton = document.createElement('button');
-                installButton.className = 'btn btn-outline-info btn-sm position-fixed';
-                installButton.style.cssText = 'top: 20px; right: 20px; z-index: 1000;';
-                installButton.innerHTML = '<i class="fas fa-download me-2"></i>Install App';
-                installButton.addEventListener('click', installApp);
-                document.body.appendChild(installButton);
-            }
-        }
-
-        // Install PWA
-        async function installApp() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const choiceResult = await deferredPrompt.userChoice;
-                if (choiceResult.outcome === 'accepted') {
-                    console.log('PWA installation accepted');
-                    if (installButton) {
-                        installButton.remove();
-                        installButton = null;
-                    }
-                }
-                deferredPrompt = null;
-            }
-        }
-
-        // Listen for install prompt
+        // Listen for install prompt but don't show button (removed per user request)
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            createInstallButton();
+            // Install button functionality removed
         });
 
-        // Remove install button when app is installed
+        // Handle app installation event
         window.addEventListener('appinstalled', () => {
             console.log('PWA installed successfully');
-            if (installButton) {
-                installButton.remove();
-                installButton = null;
-            }
             deferredPrompt = null;
         });
 
