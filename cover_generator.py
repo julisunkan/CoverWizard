@@ -230,9 +230,19 @@ class CoverGenerator:
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
                 
+                original_size = img.size
+                self.logger.info(f"Processing image {image_path}: {original_size[0]}x{original_size[1]} -> {target_width}x{target_height}")
+                
                 # Use intelligent extension for professional appearance
                 final_img = self.extend_image_intelligently(img, target_width, target_height)
                 
+                # Verify final dimensions
+                if final_img.size != (target_width, target_height):
+                    self.logger.warning(f"Image size mismatch: expected {target_width}x{target_height}, got {final_img.size}")
+                    # Force resize to exact dimensions if needed
+                    final_img = final_img.resize((target_width, target_height), Image.Resampling.LANCZOS)
+                
+                self.logger.info(f"Image processed successfully: final size {final_img.size}")
                 return final_img
                 
         except Exception as e:
@@ -367,26 +377,36 @@ class CoverGenerator:
             # Create base cover image
             cover = Image.new('RGB', (width_px, height_px), (255, 255, 255))
             
+            # Define standard dimensions for both covers to ensure consistency
+            cover_width_px = front_width_px
+            cover_height_px = front_height_px
+            
+            self.logger.info(f"Standard cover dimensions: {cover_width_px}x{cover_height_px}")
+            
             # Load and position back cover image (left side of the wraparound)
             if back_image_path:
+                self.logger.info("Processing back cover image...")
                 back_img = self.load_and_resize_image(
                     back_image_path, 
-                    front_width_px, 
-                    front_height_px
+                    cover_width_px, 
+                    cover_height_px
                 )
+                self.logger.info(f"Back cover final size: {back_img.size}")
                 back_x = bleed_px
                 back_y = bleed_px
                 cover.paste(back_img, (back_x, back_y))
             
             # Load and position front cover image (right side of the wraparound)
+            self.logger.info("Processing front cover image...")
             front_img = self.load_and_resize_image(
                 front_image_path, 
-                front_width_px, 
-                front_height_px
+                cover_width_px, 
+                cover_height_px
             )
+            self.logger.info(f"Front cover final size: {front_img.size}")
             
             # Position front cover (right side of the wraparound)
-            front_x = width_px - bleed_px - front_width_px
+            front_x = width_px - bleed_px - cover_width_px
             front_y = bleed_px
             cover.paste(front_img, (front_x, front_y))
             
