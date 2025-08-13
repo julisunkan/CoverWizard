@@ -181,6 +181,15 @@ def service_worker():
         logging.error(f"Error serving service worker: {str(e)}")
         return "Service worker not found", 404
 
+@app.route('/offline')
+def offline():
+    """Serve offline page"""
+    try:
+        return send_file('static/offline.html')
+    except Exception as e:
+        logging.error(f"Error serving offline page: {str(e)}")
+        return "Offline page not found", 404
+
 @app.errorhandler(413)
 def too_large(e):
     """Handle file too large error"""

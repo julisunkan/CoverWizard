@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KDP Cover Creator - Offline</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#007bff">
+    <meta name="background-color" content="#1a1a1a">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .offline-container {
+            max-width: 500px;
+            padding: 2rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .offline-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 2rem;
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 123, 255, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .offline-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #007bff, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .offline-subtitle {
+            font-size: 1.2rem;
+            color: #a0a0a0;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .offline-features {
+            list-style: none;
+            padding: 0;
+            margin: 2rem 0;
+        }
+
+        .offline-features li {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1rem 0;
+            font-size: 1rem;
+            color: #b0b0b0;
+            animation: slideInLeft 0.8s ease-out;
+            animation-delay: calc(var(--delay) * 0.2s);
+            animation-fill-mode: both;
+        }
+
+        .offline-features li::before {
+            content: "✓";
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: #28a745;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-size: 0.8rem;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .retry-button {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        .retry-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
+        }
+
+        .connection-status {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: blink 1.5s infinite;
+        }
+
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(0, 123, 255, 0.3);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes blink {
+            0%, 50% {
+                opacity: 1;
+            }
+            51%, 100% {
+                opacity: 0.3;
+            }
+        }
+
+        @keyframes float {
+            from {
+                transform: translateY(100vh) rotate(0deg);
+            }
+            to {
+                transform: translateY(-10vh) rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .offline-container {
+                padding: 1rem;
+            }
+            
+            .offline-title {
+                font-size: 2rem;
+            }
+            
+            .offline-icon {
+                width: 100px;
+                height: 100px;
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating background elements -->
+    <div class="floating-elements" id="floatingElements"></div>
+
+    <div class="offline-container">
+        <div class="offline-icon">
+            📱
+        </div>
+        
+        <h1 class="offline-title">You're Offline</h1>
+        
+        <p class="offline-subtitle">
+            No internet connection detected, but your KDP Cover Creator is still ready to use!
+        </p>
+
+        <ul class="offline-features">
+            <li style="--delay: 1">Your form data is automatically saved</li>
+            <li style="--delay: 2">App works fully offline</li>
+            <li style="--delay: 3">Covers will generate when back online</li>
+            <li style="--delay: 4">All features remain accessible</li>
+        </ul>
+
+        <button class="retry-button" onclick="checkConnection()">
+            🔄 Check Connection
+        </button>
+    </div>
+
+    <div class="connection-status">
+        <div class="status-dot"></div>
+        <span>Offline Mode</span>
+    </div>
+
+    <script>
+        // Create floating background elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            const numElements = 20;
+            
+            for (let i = 0; i < numElements; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 15 + 's';
+                element.style.animationDuration = (10 + Math.random() * 10) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Check connection and redirect if online
+        function checkConnection() {
+            if (navigator.onLine) {
+                window.location.href = '/';
+            } else {
+                // Show feedback that we're still offline
+                const button = document.querySelector('.retry-button');
+                const originalText = button.innerHTML;
+                button.innerHTML = '⏳ Still Offline...';
+                button.disabled = true;
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }, 2000);
+            }
+        }
+
+        // Listen for online event
+        window.addEventListener('online', () => {
+            window.location.href = '/';
+        });
+
+        // Initialize
+        createFloatingElements();
+
+        // Auto-check connection every 30 seconds
+        setInterval(() => {
+            if (navigator.onLine) {
+                window.location.href = '/';
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

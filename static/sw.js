@@ -4,6 +4,7 @@ const urlsToCache = [
   '/',
   '/static/css/style.css',
   '/static/manifest.json',
+  '/static/offline.html',
   '/static/icons/icon-192x192.png',
   '/static/icons/icon-512x512.png',
   '/static/icons/icon-maskable-192x192.png',
@@ -94,7 +95,9 @@ self.addEventListener('fetch', (event) => {
         }).catch(() => {
           // Network failed, try to return cached fallback for navigation requests
           if (event.request.destination === 'document') {
-            return caches.match('/');
+            return caches.match('/static/offline.html').then(response => {
+              return response || caches.match('/');
+            });
           }
           // For other resources, return a transparent response to avoid error messages
           if (event.request.destination === 'image') {
