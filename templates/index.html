@@ -244,7 +244,7 @@
                             </div>
 
                             <!-- Download Button (hidden by default) -->
-                            <div class="d-grid mt-3" id="downloadContainer" style="display: none;">
+                            <div class="d-grid mt-3" id="downloadContainer" style="display: none !important;">
                                 <button type="button" class="btn btn-success btn-lg" id="downloadBtn">
                                     <i class="fas fa-download me-2"></i>
                                     Download KDP Cover
@@ -321,6 +321,14 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Ensure download button is hidden on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const downloadContainer = document.getElementById('downloadContainer');
+            if (downloadContainer) {
+                downloadContainer.style.display = 'none';
+            }
+        });
+        
         // Update font size display
         function updateFontSizeDisplay(type) {
             const slider = document.getElementById(type + '_font_size');
@@ -424,6 +432,7 @@
                         const downloadBtn = document.getElementById('downloadBtn');
                         
                         downloadContainer.style.display = 'block';
+                        downloadContainer.style.setProperty('display', 'block', 'important');
                         
                         // Set up download button click handler
                         downloadBtn.onclick = function() {
