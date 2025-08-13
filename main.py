@@ -31,18 +31,35 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def cleanup_files(file_paths):
+    """Safely remove uploaded files"""
+    for file_path in file_paths:
+        if file_path and os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                logging.error(f"Error removing file {file_path}: {str(e)}")
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     """Main page with form for cover generation"""
     if request.method == 'POST':
+        front_file_path = None
+        back_file_path = None
+        
         try:
+            # Check if request has files
+            if not request.files:
+                flash('No files uploaded', 'error')
+                return redirect(request.url)
+            
             # Validate front cover upload
             if 'front_cover_image' not in request.files:
                 flash('No front cover image selected', 'error')
                 return redirect(request.url)
             
             front_file = request.files['front_cover_image']
-            if front_file.filename == '':
+            if not front_file or front_file.filename == '':
                 flash('No front cover image selected', 'error')
                 return redirect(request.url)
             
@@ -60,10 +77,11 @@ def index():
             back_file_path = None
             if 'back_cover_image' in request.files:
                 back_file = request.files['back_cover_image']
-                if back_file.filename and back_file.filename != '':
+                if back_file and back_file.filename and back_file.filename != '':
                     if not allowed_file(back_file.filename):
                         flash('Invalid file type for back cover. Please upload PNG, JPG, JPEG, GIF, BMP, or TIFF files.', 'error')
-                        os.remove(front_file_path)  # Clean up front cover
+                        if os.path.exists(front_file_path):
+                            os.remove(front_file_path)  # Clean up front cover
                         return redirect(request.url)
                     
                     # Save back cover file
@@ -89,9 +107,8 @@ def index():
             # Validate required fields
             if not book_data['title'] or not book_data['author']:
                 flash('Title and Author are required fields', 'error')
-                os.remove(front_file_path)  # Clean up uploaded files
-                if back_file_path:
-                    os.remove(back_file_path)
+                # Clean up uploaded files
+                cleanup_files([front_file_path, back_file_path])
                 return redirect(request.url)
             
             # Generate cover
@@ -106,10 +123,8 @@ def index():
                 output_path=output_path
             )
             
-            # Clean up uploaded files
-            os.remove(front_file_path)
-            if back_file_path:
-                os.remove(back_file_path)
+            # Always clean up uploaded files
+            cleanup_files([front_file_path, back_file_path])
             
             if success:
                 flash('Cover generated successfully!', 'success')
@@ -120,7 +135,10 @@ def index():
                 
         except Exception as e:
             logging.error(f"Error processing cover generation: {str(e)}")
-            flash(f'An error occurred: {str(e)}', 'error')
+            # Clean up any uploaded files on error
+            cleanup_files([front_file_path, back_file_path])
+            
+            flash(f'An error occurred while processing your request. Please try again.', 'error')
             return redirect(request.url)
     
     return render_template('index.html')
