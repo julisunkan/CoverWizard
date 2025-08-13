@@ -60,35 +60,178 @@ class CoverGenerator:
         
         return total_width, total_height, spine_width
     
+    def get_dominant_edge_color(self, img, edge_width=10):
+        """Get the dominant color from the edges of an image for background extension"""
+        try:
+            # Sample pixels from all four edges
+            edge_pixels = []
+            
+            # Top and bottom edges
+            for y in [0, img.height - 1]:
+                for x in range(0, img.width, max(1, img.width // 20)):
+                    edge_pixels.append(img.getpixel((x, y)))
+            
+            # Left and right edges
+            for x in [0, img.width - 1]:
+                for y in range(0, img.height, max(1, img.height // 20)):
+                    edge_pixels.append(img.getpixel((x, y)))
+            
+            # Calculate average color
+            if edge_pixels:
+                avg_r = sum(pixel[0] for pixel in edge_pixels) // len(edge_pixels)
+                avg_g = sum(pixel[1] for pixel in edge_pixels) // len(edge_pixels)
+                avg_b = sum(pixel[2] for pixel in edge_pixels) // len(edge_pixels)
+                return (avg_r, avg_g, avg_b)
+            else:
+                return (255, 255, 255)  # Default to white
+                
+        except Exception:
+            return (255, 255, 255)  # Default to white if color detection fails
+
+    def create_blurred_background(self, img, target_width, target_height):
+        """Create a blurred background from the source image for professional extension"""
+        try:
+            from PIL import ImageFilter
+            
+            # Scale image to fill the entire target area (may crop)
+            img_ratio = img.width / img.height
+            target_ratio = target_width / target_height
+            
+            if img_ratio > target_ratio:
+                # Image is wider - scale by height to fill
+                scale_factor = target_height / img.height
+                new_height = target_height
+                new_width = int(img.width * scale_factor)
+            else:
+                # Image is taller - scale by width to fill
+                scale_factor = target_width / img.width
+                new_width = target_width
+                new_height = int(img.height * scale_factor)
+            
+            # Create oversized version for cropping
+            oversized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            
+            # Crop to exact target size from center
+            left = (new_width - target_width) // 2
+            top = (new_height - target_height) // 2
+            right = left + target_width
+            bottom = top + target_height
+            
+            background = oversized.crop((left, top, right, bottom))
+            
+            # Apply blur for background effect
+            background = background.filter(ImageFilter.GaussianBlur(radius=15))
+            
+            # Reduce opacity by blending with dominant color
+            bg_color = self.get_dominant_edge_color(img)
+            overlay = Image.new('RGB', (target_width, target_height), bg_color)
+            
+            # Blend for subtle background effect
+            background = Image.blend(background, overlay, 0.3)
+            
+            return background
+            
+        except Exception as e:
+            self.logger.error(f"Error creating blurred background: {str(e)}")
+            # Fallback to solid color
+            bg_color = self.get_dominant_edge_color(img)
+            return Image.new('RGB', (target_width, target_height), bg_color)
+
+    def extend_image_intelligently(self, img, target_width, target_height):
+        """Extend image using intelligent background creation for professional appearance"""
+        try:
+            # Calculate position and scaling to fit image optimally
+            img_ratio = img.width / img.height
+            target_ratio = target_width / target_height
+            
+            # Determine if we should fit by width or height, with professional scaling
+            min_fill_ratio = 0.85  # Ensure image takes up at least 85% of the area
+            
+            if img_ratio > target_ratio:
+                # Image is wider - fit by width but ensure good coverage
+                scale_factor = target_width / img.width
+                new_width = target_width
+                new_height = int(img.height * scale_factor)
+                
+                # If height coverage is too small, scale up more
+                height_ratio = new_height / target_height
+                if height_ratio < min_fill_ratio:
+                    scale_factor = (target_height * min_fill_ratio) / img.height
+                    new_height = int(img.height * scale_factor)
+                    new_width = int(img.width * scale_factor)
+            else:
+                # Image is taller - fit by height but ensure good coverage
+                scale_factor = target_height / img.height
+                new_height = target_height
+                new_width = int(img.width * scale_factor)
+                
+                # If width coverage is too small, scale up more
+                width_ratio = new_width / target_width
+                if width_ratio < min_fill_ratio:
+                    scale_factor = (target_width * min_fill_ratio) / img.width
+                    new_width = int(img.width * scale_factor)
+                    new_height = int(img.height * scale_factor)
+            
+            # Resize the image with high quality
+            scaled_img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            
+            # Create professional background
+            if new_width >= target_width and new_height >= target_height:
+                # Image is larger than target - crop from center
+                left = (new_width - target_width) // 2
+                top = (new_height - target_height) // 2
+                right = left + target_width
+                bottom = top + target_height
+                return scaled_img.crop((left, top, right, bottom))
+            else:
+                # Create blurred background for professional extension
+                background = self.create_blurred_background(img, target_width, target_height)
+                
+                # Center the scaled image on the background
+                final_x = (target_width - new_width) // 2
+                final_y = (target_height - new_height) // 2
+                background.paste(scaled_img, (final_x, final_y))
+                
+                return background
+            
+        except Exception as e:
+            self.logger.error(f"Error in intelligent image extension: {str(e)}")
+            # Fallback to simple centering
+            return self.simple_resize_fallback(img, target_width, target_height)
+
+    def simple_resize_fallback(self, img, target_width, target_height):
+        """Fallback method for image resizing"""
+        # Scale to fit
+        img_ratio = img.width / img.height
+        target_ratio = target_width / target_height
+        
+        if img_ratio > target_ratio:
+            new_height = target_height
+            new_width = int(new_height * img_ratio)
+        else:
+            new_width = target_width
+            new_height = int(new_width / img_ratio)
+        
+        resized_img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        
+        # Center on white background
+        final_img = Image.new('RGB', (target_width, target_height), (255, 255, 255))
+        x_offset = (target_width - new_width) // 2
+        y_offset = (target_height - new_height) // 2
+        final_img.paste(resized_img, (x_offset, y_offset))
+        
+        return final_img
+
     def load_and_resize_image(self, image_path, target_width, target_height):
-        """Load and resize image to fit target dimensions while maintaining aspect ratio"""
+        """Load and professionally resize image to exact target dimensions"""
         try:
             with Image.open(image_path) as img:
                 # Convert to RGB if necessary
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
                 
-                # Calculate scaling to fit within target dimensions
-                img_ratio = img.width / img.height
-                target_ratio = target_width / target_height
-                
-                if img_ratio > target_ratio:
-                    # Image is wider, scale by height
-                    new_height = target_height
-                    new_width = int(new_height * img_ratio)
-                else:
-                    # Image is taller, scale by width
-                    new_width = target_width
-                    new_height = int(new_width / img_ratio)
-                
-                # Resize image
-                resized_img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-                
-                # Create new image with target dimensions and center the resized image
-                final_img = Image.new('RGB', (target_width, target_height), (255, 255, 255))
-                x_offset = (target_width - new_width) // 2
-                y_offset = (target_height - new_height) // 2
-                final_img.paste(resized_img, (x_offset, y_offset))
+                # Use intelligent extension for professional appearance
+                final_img = self.extend_image_intelligently(img, target_width, target_height)
                 
                 return final_img
                 

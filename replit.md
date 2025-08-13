@@ -21,6 +21,9 @@ Preferred communication style: Simple, everyday language.
 - **File Management**: Secure file upload handling with extension validation and size limits
 - **Cover Generation Logic**: Dedicated CoverGenerator class handling KDP specifications including:
   - Complete wraparound cover layout (back + spine + front)
+  - Intelligent image enhancement and extension for professional appearance
+  - Automatic aspect ratio handling with blurred background extension
+  - Edge color detection for seamless background matching
   - Standard trim sizes (5x8, 6x9, 8.5x11, etc.)
   - Automatic spine width calculation based on page count
   - Bleed margin compliance (0.125" standard)
