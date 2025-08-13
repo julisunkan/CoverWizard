@@ -528,15 +528,15 @@ class CoverGenerator:
             self.logger.error(f"Error adding front cover text: {str(e)}")
     
     def add_spine_text(self, draw, book_data, x, y, width, height):
-        """Add rotated text to spine with professional formatting"""
+        """Add rotated text to spine with clear, readable formatting"""
         try:
             spine_text = book_data['spine_text'].strip()
             if not spine_text:
                 return
                 
-            # Calculate appropriate font size for spine
-            spine_font_size = max(min(int(width * 0.7), 24), 10)
-            font = self.get_font(spine_font_size, bold=True)
+            # Calculate appropriate font size for spine readability
+            spine_font_size = max(min(int(width * 0.6), 20), 8)
+            font = self.get_font(spine_font_size, bold=False)  # Use regular weight for clarity
             
             # Parse color
             color = book_data['text_color']
@@ -544,15 +544,15 @@ class CoverGenerator:
                 color = color[1:]
             color_rgb = tuple(int(color[i:i+2], 16) for i in (0, 2, 4))
             
-            # Create larger temporary image for better text rendering
-            temp_size_multiplier = 3  # Higher resolution for better quality
+            # Create temporary image for text rendering
+            temp_size_multiplier = 2  # Lower multiplier for cleaner text
             temp_width = height * temp_size_multiplier
             temp_height = width * temp_size_multiplier
             temp_img = Image.new('RGBA', (temp_width, temp_height), (0, 0, 0, 0))
             temp_draw = ImageDraw.Draw(temp_img)
             
             # Scale font for high resolution
-            hires_font = self.get_font(spine_font_size * temp_size_multiplier, bold=True)
+            hires_font = self.get_font(spine_font_size * temp_size_multiplier, bold=False)
             
             # Get text dimensions
             bbox = temp_draw.textbbox((0, 0), spine_text, font=hires_font)
@@ -563,19 +563,18 @@ class CoverGenerator:
             text_x = (temp_width - text_width) // 2
             text_y = (temp_height - text_height) // 2
             
-            # Draw text with effects on high-res temporary image
-            # Draw shadow first
-            shadow_offset = max(3, spine_font_size // 10) * temp_size_multiplier
+            # Draw subtle shadow for readability
+            shadow_offset = max(1, spine_font_size // 15) * temp_size_multiplier
             temp_draw.text((text_x + shadow_offset, text_y + shadow_offset), spine_text, 
-                          font=hires_font, fill=(0, 0, 0, 180))
+                          font=hires_font, fill=(0, 0, 0, 120))
             
-            # Draw outline
-            outline_width = max(2, spine_font_size // 15) * temp_size_multiplier
+            # Draw thin outline for contrast
+            outline_width = max(1, spine_font_size // 20) * temp_size_multiplier
             for dx in range(-outline_width, outline_width + 1):
                 for dy in range(-outline_width, outline_width + 1):
                     if dx != 0 or dy != 0:
                         temp_draw.text((text_x + dx, text_y + dy), spine_text, 
-                                     font=hires_font, fill=(0, 0, 0))
+                                     font=hires_font, fill=(255, 255, 255))
             
             # Draw main text
             temp_draw.text((text_x, text_y), spine_text, font=hires_font, fill=color_rgb)
@@ -583,7 +582,7 @@ class CoverGenerator:
             # Rotate the text image 90 degrees counterclockwise
             rotated_img = temp_img.rotate(90, expand=True)
             
-            # Scale back down to target size
+            # Scale back down to target size with high quality
             final_width = rotated_img.width // temp_size_multiplier
             final_height = rotated_img.height // temp_size_multiplier
             rotated_img = rotated_img.resize((final_width, final_height), Image.Resampling.LANCZOS)
