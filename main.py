@@ -149,6 +149,16 @@ def index():
     
     return render_template('index.html')
 
+@app.route('/manifest.json')
+def manifest():
+    """Serve PWA manifest file"""
+    return send_file('static/manifest.json', mimetype='application/json')
+
+@app.route('/sw.js')
+def service_worker():
+    """Serve service worker file"""
+    return send_file('static/sw.js', mimetype='application/javascript')
+
 @app.errorhandler(413)
 def too_large(e):
     """Handle file too large error"""

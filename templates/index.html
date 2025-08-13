@@ -4,6 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KDP Cover Creator</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Professional KDP-compliant wraparound book cover generator with offline support">
+    <meta name="theme-color" content="#007bff">
+    <meta name="background-color" content="#1a1a1a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KDP Cover Creator">
+    <meta name="application-name" content="KDP Cover Creator">
+    <meta name="msapplication-TileColor" content="#007bff">
+    <meta name="msapplication-navbutton-color" content="#007bff">
+    
+    <!-- PWA Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='icons/icon-512x512.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
+    <link rel="apple-touch-icon" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
+    <link rel="apple-touch-icon" sizes="512x512" href="{{ url_for('static', filename='icons/icon-512x512.png') }}">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    
+    <!-- Stylesheets -->
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -268,14 +292,25 @@
             display.textContent = slider.value + 'px';
         }
 
-        // Form submission handling
+        // Form submission handling with offline support
         document.getElementById('coverForm').addEventListener('submit', function(e) {
             const submitBtn = document.getElementById('generateBtn');
             const originalText = submitBtn.innerHTML;
             
+            // Check if online
+            if (!navigator.onLine) {
+                e.preventDefault();
+                alert('You are currently offline. Cover generation requires an internet connection. Your form data has been saved and will be submitted when you\'re back online.');
+                saveFormDataOffline();
+                return false;
+            }
+            
             // Update button to show loading state
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating Cover...';
             submitBtn.disabled = true;
+            
+            // Save form data for offline recovery
+            saveFormDataOffline();
             
             // Re-enable button after form submission
             setTimeout(() => {
@@ -283,6 +318,83 @@
                 submitBtn.disabled = false;
             }, 2000);
         });
+
+        // Save form data to local storage for offline use
+        function saveFormDataOffline() {
+            const formData = {
+                title: document.getElementById('title').value,
+                subtitle: document.getElementById('subtitle').value,
+                author: document.getElementById('author').value,
+                spine_text: document.getElementById('spine_text').value,
+                back_cover_text: document.getElementById('back_cover_text').value,
+                page_count: document.getElementById('page_count').value,
+                trim_size: document.getElementById('trim_size').value,
+                title_font_size: document.getElementById('title_font_size').value,
+                author_font_size: document.getElementById('author_font_size').value,
+                text_color: document.getElementById('text_color').value,
+                timestamp: new Date().toISOString()
+            };
+            
+            try {
+                localStorage.setItem('kdp_form_data', JSON.stringify(formData));
+                console.log('Form data saved offline');
+            } catch (error) {
+                console.log('Error saving form data:', error);
+            }
+        }
+
+        // Load saved form data
+        function loadSavedFormData() {
+            try {
+                const savedData = localStorage.getItem('kdp_form_data');
+                if (savedData) {
+                    const formData = JSON.parse(savedData);
+                    
+                    // Restore form values
+                    document.getElementById('title').value = formData.title || '';
+                    document.getElementById('subtitle').value = formData.subtitle || '';
+                    document.getElementById('author').value = formData.author || '';
+                    document.getElementById('spine_text').value = formData.spine_text || '';
+                    document.getElementById('back_cover_text').value = formData.back_cover_text || '';
+                    document.getElementById('page_count').value = formData.page_count || 100;
+                    document.getElementById('trim_size').value = formData.trim_size || '6x9';
+                    document.getElementById('title_font_size').value = formData.title_font_size || 48;
+                    document.getElementById('author_font_size').value = formData.author_font_size || 24;
+                    document.getElementById('text_color').value = formData.text_color || '#FFFFFF';
+                    
+                    // Update font size displays
+                    updateFontSizeDisplay('title');
+                    updateFontSizeDisplay('author');
+                    
+                    console.log('Form data restored from offline storage');
+                }
+            } catch (error) {
+                console.log('Error loading saved form data:', error);
+            }
+        }
+
+        // Auto-save form data as user types
+        function setupAutoSave() {
+            const formElements = document.querySelectorAll('#coverForm input, #coverForm select, #coverForm textarea');
+            formElements.forEach(element => {
+                element.addEventListener('input', () => {
+                    debounce(saveFormDataOffline, 1000)();
+                });
+            });
+        }
+
+        // Debounce function to limit auto-save frequency
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
 
         // File upload validation function
         function validateImageFile(input, fileType) {
@@ -313,6 +425,181 @@
         // Back cover validation
         document.getElementById('back_cover_image').addEventListener('change', function(e) {
             validateImageFile(e.target, 'back cover');
+        });
+
+        // PWA Installation and Service Worker
+        let deferredPrompt;
+        let installButton;
+
+        // Create install button dynamically
+        function createInstallButton() {
+            if (!installButton && deferredPrompt) {
+                installButton = document.createElement('button');
+                installButton.className = 'btn btn-outline-info btn-sm position-fixed';
+                installButton.style.cssText = 'top: 20px; right: 20px; z-index: 1000;';
+                installButton.innerHTML = '<i class="fas fa-download me-2"></i>Install App';
+                installButton.addEventListener('click', installApp);
+                document.body.appendChild(installButton);
+            }
+        }
+
+        // Install PWA
+        async function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const choiceResult = await deferredPrompt.userChoice;
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('PWA installation accepted');
+                    if (installButton) {
+                        installButton.remove();
+                        installButton = null;
+                    }
+                }
+                deferredPrompt = null;
+            }
+        }
+
+        // Listen for install prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            createInstallButton();
+        });
+
+        // Remove install button when app is installed
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA installed successfully');
+            if (installButton) {
+                installButton.remove();
+                installButton = null;
+            }
+            deferredPrompt = null;
+        });
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('/static/sw.js');
+                    console.log('Service Worker registered successfully:', registration.scope);
+                    
+                    // Listen for updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        if (newWorker) {
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed') {
+                                    if (navigator.serviceWorker.controller) {
+                                        // New content available, show update notification
+                                        showUpdateNotification();
+                                    }
+                                }
+                            });
+                        }
+                    });
+                } catch (error) {
+                    console.log('Service Worker registration failed:', error);
+                }
+            });
+        }
+
+        // Show update notification
+        function showUpdateNotification() {
+            const notification = document.createElement('div');
+            notification.className = 'alert alert-info alert-dismissible fade show position-fixed';
+            notification.style.cssText = 'top: 80px; right: 20px; z-index: 1001; max-width: 300px;';
+            notification.innerHTML = `
+                <i class="fas fa-sync-alt me-2"></i>
+                New version available!
+                <button type="button" class="btn btn-sm btn-info ms-2" onclick="updateApp()">Update</button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(notification);
+        }
+
+        // Update app
+        function updateApp() {
+            if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+            }
+            window.location.reload();
+        }
+
+        // Online/Offline status
+        function updateOnlineStatus() {
+            const statusIndicator = document.getElementById('onlineStatus');
+            if (!statusIndicator) {
+                const indicator = document.createElement('div');
+                indicator.id = 'onlineStatus';
+                indicator.className = 'position-fixed';
+                indicator.style.cssText = 'bottom: 20px; left: 20px; z-index: 1000;';
+                document.body.appendChild(indicator);
+            }
+            
+            const indicator = document.getElementById('onlineStatus');
+            if (navigator.onLine) {
+                indicator.innerHTML = '<span class="badge bg-success"><i class="fas fa-wifi me-1"></i>Online</span>';
+            } else {
+                indicator.innerHTML = '<span class="badge bg-warning"><i class="fas fa-wifi-slash me-1"></i>Offline</span>';
+            }
+        }
+
+        // Monitor online/offline status
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        
+        // Initialize status on page load
+        updateOnlineStatus();
+        
+        // Initialize offline features when page loads
+        window.addEventListener('load', () => {
+            loadSavedFormData();
+            setupAutoSave();
+            
+            // Show offline notification if starting offline
+            if (!navigator.onLine) {
+                showOfflineNotification();
+            }
+        });
+
+        // Show offline notification
+        function showOfflineNotification() {
+            const notification = document.createElement('div');
+            notification.className = 'alert alert-warning alert-dismissible fade show position-fixed';
+            notification.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 1002; max-width: 400px;';
+            notification.innerHTML = `
+                <i class="fas fa-wifi-slash me-2"></i>
+                You're offline. You can still view the app and your form data is saved.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(notification);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // When coming back online, show reconnected notification
+        window.addEventListener('online', () => {
+            const notification = document.createElement('div');
+            notification.className = 'alert alert-success alert-dismissible fade show position-fixed';
+            notification.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 1002; max-width: 400px;';
+            notification.innerHTML = `
+                <i class="fas fa-wifi me-2"></i>
+                You're back online! Cover generation is now available.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(notification);
+            
+            // Auto-dismiss after 3 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 3000);
         });
     </script>
 </body>

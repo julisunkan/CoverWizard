@@ -1,8 +1,8 @@
 # Overview
 
-KDP Cover Creator is a Flask-based web application that generates professional KDP (Kindle Direct Publishing) compliant wraparound book covers. The application creates complete PDF covers with front cover, spine, and back cover sections, including proper bleed margins and spine calculations based on page count and trim size specifications. Users can upload separate front and back cover images and customize various aspects of their book covers including dimensions, colors, and text elements.
+KDP Cover Creator is a Progressive Web App (PWA) built with Flask that generates professional KDP (Kindle Direct Publishing) compliant wraparound book covers. The application creates complete PDF covers with front cover, spine, and back cover sections, including proper bleed margins and spine calculations based on page count and trim size specifications. Users can upload separate front and back cover images and customize various aspects of their book covers including dimensions, colors, and text elements.
 
-The application is now fully prepared for deployment on PythonAnywhere with professional text rendering, exact KDP dimension compliance, and production-ready configuration.
+The application now features complete PWA functionality with offline support, installable app capabilities, service worker caching, and automatic form data persistence. Users can install the app on their devices and continue working offline with automatic data synchronization when back online.
 
 # User Preferences
 
@@ -11,10 +11,13 @@ Preferred communication style: Simple, everyday language.
 # System Architecture
 
 ## Frontend Architecture
+- **Progressive Web App**: Full PWA implementation with service worker, manifest, and installable capabilities
 - **Template Engine**: Jinja2 templates with Bootstrap 5 dark theme for responsive UI
-- **Styling**: Custom CSS with Font Awesome icons for enhanced visual appeal
-- **Form Handling**: Multi-part form uploads with client-side validation
-- **User Feedback**: Flash message system for error handling and success notifications
+- **Styling**: Custom CSS with Font Awesome icons and PWA-specific enhancements
+- **Form Handling**: Multi-part form uploads with client-side validation and offline form data persistence
+- **User Feedback**: Flash message system with online/offline status indicators and connection notifications
+- **Offline Support**: Automatic form data saving to localStorage with restoration on page load
+- **Service Worker**: Complete offline caching of static assets, CDN resources, and app shell
 
 ## Backend Architecture
 - **Framework**: Flask web framework with route-based request handling
@@ -39,11 +42,15 @@ Preferred communication style: Simple, everyday language.
 - **File Storage**: Local filesystem for uploaded images and generated covers
 - **Session Management**: Flask sessions with configurable secret key
 - **Temporary Files**: System temp directory for intermediate processing
+- **Offline Storage**: localStorage for form data persistence and offline functionality
+- **PWA Cache**: Service worker manages cache storage for static assets and application shell
 
 ## Configuration Management
 - **Environment Variables**: SESSION_SECRET for security
 - **File Limits**: 16MB maximum upload size with multiple image format support
-- **Directory Structure**: Organized static folders for uploads and outputs
+- **Directory Structure**: Organized static folders for uploads, outputs, icons, and PWA assets
+- **PWA Manifest**: Complete manifest.json with app metadata, icons, and display preferences
+- **Service Worker**: Comprehensive caching strategy with cache versioning and update handling
 
 # External Dependencies
 
