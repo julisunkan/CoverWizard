@@ -2,6 +2,8 @@
 
 KDP Cover Creator is a Flask-based web application that generates professional KDP (Kindle Direct Publishing) compliant wraparound book covers. The application creates complete PDF covers with front cover, spine, and back cover sections, including proper bleed margins and spine calculations based on page count and trim size specifications. Users can upload separate front and back cover images and customize various aspects of their book covers including dimensions, colors, and text elements.
 
+The application is now fully prepared for deployment on PythonAnywhere with professional text rendering, exact KDP dimension compliance, and production-ready configuration.
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -63,3 +65,31 @@ Preferred communication style: Simple, everyday language.
 ## System Requirements
 - **Python Environment**: Standard library modules (os, logging, tempfile, uuid)
 - **File System**: Read/write access for upload and output directories
+
+# Deployment Configuration
+
+## PythonAnywhere Deployment
+The application is fully configured for deployment on PythonAnywhere hosting platform:
+
+### Deployment Files
+- **wsgi.py**: WSGI configuration file for PythonAnywhere
+- **deployment_guide.md**: Complete step-by-step deployment instructions
+- **deployment_checklist.txt**: Pre-deployment checklist for verification
+
+### Production Features
+- **Logging**: Configured for production with INFO level logging
+- **Debug Mode**: Automatically disabled in production environment
+- **File Handling**: Robust upload and cleanup mechanisms
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+- **Security**: Session management with configurable secret keys
+
+### KDP Compliance
+- **Exact Dimensions**: Spine width calculation produces exact KDP-required dimensions (12.531x9.250)
+- **Professional Text**: Enhanced typography with shadows, outlines, and optimal readability
+- **Image Processing**: Both front and back covers resized to identical dimensions
+- **300 DPI Output**: High-quality PDF generation meeting KDP standards
+
+### Performance Optimizations
+- **Intelligent Image Extension**: Professional background extension for any aspect ratio
+- **Memory Management**: Optimized for PythonAnywhere's hosting environment
+- **File Cleanup**: Automatic cleanup of temporary files to prevent storage issues

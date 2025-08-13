@@ -1,0 +1,52 @@
+KDP Cover Creator - PythonAnywhere Deployment Checklist
+
+□ BEFORE DEPLOYMENT:
+  □ Test application locally to ensure everything works
+  □ Verify all dependencies are listed correctly
+  □ Check that file paths use relative paths (not absolute)
+  □ Ensure static directories exist and are writable
+  □ Generate a strong SESSION_SECRET key
+
+□ UPLOAD FILES:
+  □ main.py
+  □ cover_generator.py  
+  □ wsgi.py
+  □ templates/index.html
+  □ static/css/style.css
+  □ Create static/uploads/ directory
+  □ Create static/output/ directory
+
+□ INSTALL DEPENDENCIES:
+  □ pip3.10 install --user Flask==3.0.0
+  □ pip3.10 install --user Pillow==10.1.0
+  □ pip3.10 install --user reportlab==4.0.8
+  □ pip3.10 install --user Werkzeug==3.0.1
+
+□ CONFIGURE PYTHONANYWHERE:
+  □ Create new web app (Manual configuration, Python 3.10)
+  □ Set source code path: /home/yourusername/mysite
+  □ Set working directory: /home/yourusername/mysite  
+  □ Set WSGI file: /home/yourusername/mysite/wsgi.py
+  □ Add static file mapping: /static/ -> /home/yourusername/mysite/static/
+
+□ UPDATE WSGI.PY:
+  □ Replace 'yourusername' with actual username
+  □ Set secure SESSION_SECRET
+  □ Verify import paths are correct
+
+□ SET PERMISSIONS:
+  □ chmod 755 static/uploads
+  □ chmod 755 static/output
+
+□ TEST DEPLOYMENT:
+  □ Click "Reload" on web app
+  □ Visit https://yourusername.pythonanywhere.com
+  □ Test file upload functionality
+  □ Test cover generation
+  □ Verify PDF download works
+
+□ PRODUCTION CONSIDERATIONS:
+  □ Monitor error logs regularly
+  □ Implement file cleanup routine for old uploads/outputs
+  □ Consider upgrading to paid account for better performance
+  □ Set up monitoring for uptime and errors

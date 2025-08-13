@@ -5,12 +5,18 @@ from werkzeug.utils import secure_filename
 import uuid
 from cover_generator import CoverGenerator
 
-# Configure logging for debugging
-logging.basicConfig(level=logging.DEBUG)
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,  # Use INFO for production, DEBUG for development
+    format='%(asctime)s %(levelname)s %(name)s %(message)s'
+)
 
 # Create Flask app
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "your-secret-key-here")
+
+# Disable debug mode for production
+app.debug = os.environ.get("FLASK_ENV") == "development"
 
 # Configuration
 UPLOAD_FOLDER = 'static/uploads'
