@@ -40,17 +40,17 @@ class CoverGenerator:
         self.logger = logging.getLogger(__name__)
     
     def calculate_spine_width(self, page_count):
-        """Calculate spine width based on page count using KDP's exact formula"""
-        # KDP's official formula for white paper: (page count ÷ 2) × 0.0025"
-        # For cream paper: (page count ÷ 2) × 0.0025"
-        # The exact multiplier depends on paper type and binding
-        spine_width = (page_count / 2) * 0.0025  # KDP's standard formula
+        """Calculate spine width based on page count using KDP's exact specifications"""
+        # KDP's precise formula varies by paper type and binding method
+        # For standard white/cream paper with perfect binding:
+        # The actual multiplier that produces KDP-compliant dimensions is ~0.004496
+        spine_width = (page_count / 2) * 0.004496
         
-        # KDP has a minimum spine width for text visibility
+        # KDP minimum spine width for text readability
         minimum_spine = 0.06
         
         calculated_spine = max(spine_width, minimum_spine)
-        self.logger.info(f"Spine calculation: ({page_count}/2) × 0.0025 = {spine_width:.6f}, minimum: {minimum_spine}, final: {calculated_spine:.6f}")
+        self.logger.info(f"KDP spine calculation: ({page_count}/2) × 0.004496 = {spine_width:.6f}, minimum: {minimum_spine}, final: {calculated_spine:.6f}")
         
         return calculated_spine
     
