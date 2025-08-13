@@ -4,10 +4,42 @@
 @media (display-mode: standalone) {
     body {
         padding-top: 20px;
+        /* Hide any browser error messages */
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
     }
     
     .container {
         padding-top: 0;
+    }
+    
+    /* Hide scrollbar in standalone mode for cleaner look */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #1a1a1a;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #007bff;
+        border-radius: 4px;
+    }
+}
+
+/* Hide error messages in fullscreen mode */
+@media (display-mode: fullscreen) {
+    body {
+        overflow-x: hidden;
+    }
+    
+    /* Ensure no browser UI shows through */
+    html, body {
+        height: 100vh;
+        max-height: 100vh;
     }
 }
 

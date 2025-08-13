@@ -96,9 +96,26 @@ self.addEventListener('fetch', (event) => {
           if (event.request.destination === 'document') {
             return caches.match('/');
           }
-          return new Response('Offline - resource not available', {
-            status: 503,
-            statusText: 'Service Unavailable'
+          // For other resources, return a transparent response to avoid error messages
+          if (event.request.destination === 'image') {
+            // Return a 1x1 transparent pixel for images
+            return new Response(new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,6,0,0,0,31,21,196,137,0,0,0,13,73,68,65,84,8,215,99,248,15,0,1,1,1,0,24,221,141,176,0,0,0,0,73,69,78,68,174,66,96,130]), {
+              status: 200,
+              statusText: 'OK',
+              headers: new Headers({
+                'Content-Type': 'image/png',
+                'Cache-Control': 'no-cache'
+              })
+            });
+          }
+          // Return empty response for other resources to avoid error messages
+          return new Response('', {
+            status: 200,
+            statusText: 'OK',
+            headers: new Headers({
+              'Content-Type': 'text/plain',
+              'Cache-Control': 'no-cache'
+            })
           });
         });
       })

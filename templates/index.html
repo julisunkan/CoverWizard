@@ -17,6 +17,13 @@
     <meta name="msapplication-TileColor" content="#007bff">
     <meta name="msapplication-navbutton-color" content="#007bff">
     
+    <!-- Additional PWA meta tags for better fullscreen experience -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <!-- PWA Icons -->
     <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
     <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='icons/icon-512x512.png') }}">
@@ -300,8 +307,9 @@
             // Check if online
             if (!navigator.onLine) {
                 e.preventDefault();
-                alert('You are currently offline. Cover generation requires an internet connection. Your form data has been saved and will be submitted when you\'re back online.');
+                // Silent handling - save form data and show subtle notification instead of alert
                 saveFormDataOffline();
+                showOfflineSubmissionNotification();
                 return false;
             }
             
@@ -556,30 +564,60 @@
             loadSavedFormData();
             setupAutoSave();
             
-            // Show offline notification if starting offline
+            // Show subtle offline notification if starting offline (only after 2 seconds to avoid flash)
             if (!navigator.onLine) {
-                showOfflineNotification();
+                setTimeout(() => {
+                    if (!navigator.onLine) {
+                        showOfflineNotification();
+                    }
+                }, 2000);
             }
         });
 
-        // Show offline notification
+        // Show offline notification (subtle, no errors)
         function showOfflineNotification() {
+            // Remove any existing offline notifications
+            const existing = document.querySelector('.offline-notification');
+            if (existing) {
+                existing.remove();
+            }
+            
             const notification = document.createElement('div');
-            notification.className = 'alert alert-warning alert-dismissible fade show position-fixed';
-            notification.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 1002; max-width: 400px;';
+            notification.className = 'alert alert-info alert-dismissible fade show position-fixed offline-notification';
+            notification.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 1002; max-width: 400px; opacity: 0.9;';
             notification.innerHTML = `
-                <i class="fas fa-wifi-slash me-2"></i>
-                You're offline. You can still view the app and your form data is saved.
+                <i class="fas fa-cloud-download-alt me-2"></i>
+                App ready for offline use. Form data is automatically saved.
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
             document.body.appendChild(notification);
             
-            // Auto-dismiss after 5 seconds
+            // Auto-dismiss after 3 seconds
             setTimeout(() => {
                 if (notification.parentNode) {
                     notification.remove();
                 }
-            }, 5000);
+            }, 3000);
+        }
+
+        // Show offline form submission notification (no error message)
+        function showOfflineSubmissionNotification() {
+            const notification = document.createElement('div');
+            notification.className = 'alert alert-primary alert-dismissible fade show position-fixed';
+            notification.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 1002; max-width: 400px;';
+            notification.innerHTML = `
+                <i class="fas fa-save me-2"></i>
+                Form saved! Will generate cover when connection is restored.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(notification);
+            
+            // Auto-dismiss after 4 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 4000);
         }
 
         // When coming back online, show reconnected notification
